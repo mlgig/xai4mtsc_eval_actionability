@@ -32,16 +32,19 @@ class MyMiniRocket(nn.Module):
         return X_train_trans_norm, X_test_trans_norm
 
     def train_regression(self, X_train, y_train,X_test,y_test, Cs, k, batch_size):
-       # TODO parameter!
+
+        # TODO parameter!
+        # K-fold cross validation to find the best C parameter
         n_classes = 2 #len(np.unique(y_train))
         self.classifier = LogisticRegression(9996,n_classes,nn.CrossEntropyLoss())
         best_loss ,best_C = self.classifier.validation(Cs,k,X_train,y_train,batch_size)
 
+        # final train using the hole train set based on the C previously found
         # TODO batch size as param!
         train_loader = DataLoader( MyDataset(X_train,y_train), batch_size=64,  shuffle=True)
         test_loader = DataLoader( MyDataset(X_test,y_test), batch_size=50000,  shuffle=False)
 
         self.classifier = LogisticRegression(9996,n_classes,nn.CrossEntropyLoss())
-       # TODO param for lr"
+        # TODO param for lr"
         self.classifier.optimizer = torch.optim.Adam(self.parameters(), lr= 0.0001,weight_decay=1/best_C)
         self.classifier.final_train(train_loader,test_loader)
