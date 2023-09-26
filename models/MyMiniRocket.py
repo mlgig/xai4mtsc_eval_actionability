@@ -16,7 +16,7 @@ class MyMiniRocket(nn.Module):
         self.seq_len = seq_len
         self.n_classes = n_classes
         self.transformer = MiniRocketFeatures(n_channels,seq_len,device=device)
-        self.classifier = None #LogisticRegression(9996,n_channels, nn.CrossEntropyLoss() )
+        self.classifier = LogisticRegression(9996,n_classes,nn.CrossEntropyLoss())
 
     def transform_dataset(self,X_train,X_test,chunksize):
 
@@ -34,8 +34,8 @@ class MyMiniRocket(nn.Module):
     def train_regression(self, X_train, y_train,X_test,y_test, Cs, k, batch_size):
        # TODO parameter!
         n_classes = 2 #len(np.unique(y_train))
-        linear_model = LogisticRegression(9996,n_classes,nn.CrossEntropyLoss())
-        best_loss ,best_C = linear_model.validation(Cs,k,X_train,y_train,batch_size)
+        self.classifier = LogisticRegression(9996,n_classes,nn.CrossEntropyLoss())
+        best_loss ,best_C = self.classifier.validation(Cs,k,X_train,y_train,batch_size)
 
         # TODO batch size as param!
         train_loader = DataLoader( MyDataset(X_train,y_train), batch_size=64,  shuffle=True)

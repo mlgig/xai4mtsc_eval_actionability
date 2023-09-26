@@ -110,6 +110,7 @@ class LogisticRegression(torch.nn.Module):
                 self.best_accuracy = 0.0
                 self.best_loss = 0.0
                 self.best_epoch = 0
+                self.no_improving_steps = 0
                 #TODO device as parameter!
 
                 for epoch in range(self.max_epoch):
@@ -135,6 +136,7 @@ class LogisticRegression(torch.nn.Module):
             self.train_step(train_loader)
 
             if epoch%self.check_every==0:
+
                 accuracy, to_stop = self.test_accuracy(test_loader)
                 if to_stop:
                     print("final accuracy", accuracy, self.best_accuracy, "epoch", epoch)
