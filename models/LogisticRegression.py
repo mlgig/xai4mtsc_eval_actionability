@@ -11,13 +11,13 @@ class LogisticRegression(torch.nn.Module):
     def __init__(self, input_dim, output_dim,criterion,learning_rate= 0.0001,device="cuda"):
         super(LogisticRegression, self).__init__()
         self.input_dim = input_dim
-        self.outpit_dim = output_dim
-        self.linear = torch.nn.Linear(self.input_dim, self.outpit_dim,bias=True)
+        self.output_dim = output_dim
+        self.linear = torch.nn.Linear(self.input_dim, self.output_dim,bias=True)
         self.criterion = criterion
         self.learning_rate = learning_rate
         self.device=device
 
-        # TODO following 3 need to be pass as parameters in the constructor
+        # TODO following 3 need to be pass as parameters in the constructor ?
         self.max_epoch = 300
         self.check_every = 20
         self.early_stop_after = 60
@@ -26,8 +26,7 @@ class LogisticRegression(torch.nn.Module):
         self.best_accuracy = 0.0
         self.best_loss = 0.0
         self.best_epoch = 0
-        # TODO can I do better here?
-        self.optimizer = None #torch.optim.Adam(self.parameters(), lr= learning_rate,weight_decay=1/C)
+        self.optimizer = torch.optim.Adam(self.parameters(), lr= learning_rate)
 
         self.to(device)
 
@@ -63,7 +62,7 @@ class LogisticRegression(torch.nn.Module):
 
 
     def __reset_model__(self, C):
-        self.linear = torch.nn.Linear(self.input_dim, self.outpit_dim,bias=True).to(self.device)
+        self.linear = torch.nn.Linear(self.input_dim, self.output_dim,bias=True).to(self.device)
         self.optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate, weight_decay=1 / C)
         self.best_accuracy = 0.0
         self.best_loss = 0.0
@@ -108,11 +107,8 @@ class LogisticRegression(torch.nn.Module):
             train_loader, val_loader = self.__Kfold_split__(X_train,y_train,k=k,i=i,batch_size=batch_size)
 
             for j,C in enumerate(Cs):
-                in_dim = X_train.shape[1]
-                #TODO pass as parameter!
-                n_classes = 2
 
-                #reset the model
+                # reset the model
                 self.__reset_model__(C)
                 #TODO device as parameter!
 
@@ -138,9 +134,7 @@ class LogisticRegression(torch.nn.Module):
 
         for epoch in range(self.max_epoch):
             self.__train_step__(train_loader)
-
             if epoch%self.check_every==0:
-
                 accuracy, to_stop = self.__test_accuracy__(test_loader)
                 if to_stop:
                     print("final accuracy", accuracy, self.best_accuracy, "epoch", epoch)
