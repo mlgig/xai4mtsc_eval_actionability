@@ -18,6 +18,12 @@ class MyMiniRocket(nn.Module):
         self.transformer = MiniRocketFeatures(n_channels,seq_len,device=device)
         self.classifier = LogisticRegression(9996,n_classes,nn.CrossEntropyLoss())
 
+    def forward(self,X):
+        X_trans = self.transformer(X)
+        y = self.classifier(X_trans)
+        probs = nn.functional.softmax( y )
+        return probs
+
     def transform_dataset(self,X_train,X_test,chunksize):
 
         self.transformer.fit(X_train)
