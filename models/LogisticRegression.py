@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 class LogisticRegression(torch.nn.Module):
 
     # TODO device to be set CPU and move the cuda parameter setting in main
-    def __init__(self, input_dim, output_dim,criterion,learning_rate= 0.0001,device="cuda"):
+    def __init__(self, input_dim, output_dim,criterion,learning_rate= 0.1,device="cuda"):
         super(LogisticRegression, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -36,8 +36,10 @@ class LogisticRegression(torch.nn.Module):
         for i,batch_data_train in enumerate(train_loader):
             X,y = batch_data_train
             self.optimizer.zero_grad()
+            # TODO check the following self(X)
             output = self(X)
             loss = self.criterion(output, y)
+
             loss.backward()
             losses.append(loss.detach().cpu().numpy())
             self.optimizer.step()
@@ -110,7 +112,6 @@ class LogisticRegression(torch.nn.Module):
 
                 # reset the model
                 self.__reset_model__(C)
-                #TODO device as parameter!
 
                 for epoch in range(self.max_epoch):
                     loss = self.__train_step__(train_loader)
