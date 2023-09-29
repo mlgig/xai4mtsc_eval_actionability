@@ -34,42 +34,47 @@ class MyMiniRocket(nn.Module):
         probs = nn.functional.softmax( y, dim=-1 )
         return probs
 
-    def transform_dataset(self,X_train,X_test,chunksize):
+    def transform_dataset(self,X_train,X_test,chunk_size,normalise):
 
-        def transform_miniRocket(X_train,X_test, chunksize):
+        def transform_miniRocket(X_train,X_test, chunk_size,normalise):
             self.transformer_model.fit(X_train)
-            X_train_trans = get_minirocket_features(X_train, self.transformer_model, chunksize=chunksize, to_np=False)
+            X_train_trans = get_minirocket_features(X_train, self.transformer_model, chunksize=chunk_size, to_np=False)
             empty_gpu_cache()
-            X_test_trans = get_minirocket_features(X_test, self.transformer_model, chunksize=chunksize, to_np=False)
+            X_test_trans = get_minirocket_features(X_test, self.transformer_model, chunksize=chunk_size, to_np=False)
             empty_gpu_cache()
-            # TODO normalization parameter
-            X_train_trans_norm, X_test_trans_norm = X_train_trans,X_test_trans
-            #X_train_trans_norm, X_test_trans_norm = pre_fature_normalization(X_train_trans, X_test_trans)
-            return X_train_trans_norm , X_test_trans_norm
 
-        def transform_Rocket(X_train,X_test):
+            if normalise:
+                X_train, X_test =  pre_fature_normalization(X_train_trans, X_test_trans)
+            else:
+                X_train, X_test =  X_train_trans, X_test_trans
+
+            return X_train , X_test
+
+        def transform_Rocket(X_train,X_test,normalise):
             X_train_trans = self.transformer_model(X_train)
             empty_gpu_cache()
             X_test_trans = self.transformer_model(X_test)
             empty_gpu_cache()
 
-            X_train_trans_norm, X_test_trans_norm = pre_fature_normalization(X_train_trans, X_test_trans)
-            empty_gpu_cache()
+            if normalise:
+                X_train, X_test =  pre_fature_normalization(X_train_trans, X_test_trans)
+            else:
+                X_train, X_test =  X_train_trans, X_test_trans
 
-            return  X_train_trans_norm,X_test_trans_norm
+            return X_train , X_test
 
 
         if isinstance(self.transformer_model,MiniRocketFeatures):
-            return transform_miniRocket(X_train, X_test, chunksize)
+            return transform_miniRocket(X_train, X_test, chunk_size,normalise)
         else:
-            return transform_Rocket(X_train,X_test)
+            return transform_Rocket(X_train,X_test,normalise)
 
 
     def train_regression(self, X_train, y_train,X_test,y_test, Cs, k, batch_size):
 
-        """"""
+        """
         from sklearn.linear_model import LogisticRegressionCV
-        linear = LogisticRegressionCV(cv = 5, random_state=0, n_jobs = -1,max_iter=1000, Cs=[10,100])
+        linear = LogisticRegressionCV(cv = 5, random_state=0, n_jobs = -1,max_iter=1000, Cs=Cs)
         X_train_numpy = X_train.detach().cpu().numpy()
         X_test_numpy = X_test.detach().cpu().numpy()
         y_train_numpy = y_train.detach().cpu().numpy()
@@ -77,7 +82,7 @@ class MyMiniRocket(nn.Module):
         linear.fit(X_train_numpy,y_train_numpy)
         acc = linear.score(X_test_numpy,y_test_numpy)
         print ("linear acc is",acc)
-
+        """
 
         # K-fold cross validation to find the best C parameter
         n_classes = len(torch.unique(y_train))
