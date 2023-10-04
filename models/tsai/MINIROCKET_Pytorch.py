@@ -44,13 +44,12 @@ class MiniRocketFeatures(nn.Module):
         self._set_dilations(seq_len)
 
 
-        self.kernels = []
+        self.kernels = nn.ModuleList()
         for padding,dilation in zip(self.padding, self.dilations):
-            layer =  nn.Conv1d(in_channels=self.c_in,out_channels=self.num_out_channels,kernel_size=self.kernel_size,
-                        dilation=dilation,padding=padding,groups=self.c_in,bias=False).to(device)
-            # TODO delete orig_kernels
+            layer =  nn.Conv1d(in_channels=self.c_in,out_channels=self.num_kernels*c_in,kernel_size=self.kernel_size,
+                        dilation=dilation,padding=padding,groups=self.c_in,bias=False)
             layer.weight = self.common_kernels
-            self.kernels.append(layer)
+            self.kernels.append(layer.to(device))
 
 
         # Channel combinations (multivariate)
@@ -80,6 +79,10 @@ class MiniRocketFeatures(nn.Module):
 
     def forward(self, x):
         _features = []
+        C_slice1_l = []
+        C_slice2_l = []
+        bias_slice1_l = []
+        bias_slice2_l = []
         for i,padding in enumerate(self.padding): #(dilation, padding) in enumerate(zip(self.dilations, self.padding)):
             _padding1 = i%2
 
@@ -108,20 +111,22 @@ class MiniRocketFeatures(nn.Module):
             else:
                 bias_this_dilation = getattr(self, f'biases_{i}')
 
-            # Features
-            C_slice1 = C[:, _padding1::2]
-            bias_slice1 = bias_this_dilation[_padding1::2]
-            _features.append(self._get_PPVs  ( C_slice1 , bias_slice1 ) )
+            first_PPV_c = C[:, _padding1::2].clone().detach()
+            first_PPV_bias = bias_this_dilation[_padding1::2].clone().detach()
+            _features.append(self._get_PPVs(first_PPV_c,first_PPV_bias))
 
-            C_slice2 = C[:, 1-_padding1::2, padding:-padding]
-            bias_slice2 = bias_this_dilation[1-_padding1::2]
-            _features.append(self._get_PPVs(  C_slice2,bias_slice2))
+
+            second_PPV_c =  C[:, 1-_padding1::2, padding:-padding].clone().detach()
+            second_PPV_bias = bias_this_dilation[1-_padding1::2].clone().detach()
+            _features.append(self._get_PPVs(second_PPV_c, second_PPV_bias ))
         return torch.cat(_features, dim=1)
 
     def _get_PPVs(self, C, bias):
         C = C.unsqueeze(-1)
         bias = bias.view(1, bias.shape[0], 1, bias.shape[1])
-        return (C > bias).float().mean(2).flatten(1)
+        ris =  (C > bias).float().mean(2).flatten(1).clone()
+        return ris
+        #return (C > bias).float().mean(2).flatten(1)
 
     def _set_dilations(self, input_length):
         num_features_per_kernel = self.num_features // self.num_kernels

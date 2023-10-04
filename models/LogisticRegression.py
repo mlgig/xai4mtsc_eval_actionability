@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 class LogisticRegression(torch.nn.Module):
 
     # TODO device to be set CPU and move the cuda parameter setting in main
-    def __init__(self, input_dim, output_dim,criterion,learning_rate= 0.1,device="cuda"):
+    def __init__(self, input_dim, output_dim,criterion,learning_rate= 0.0001,device="cuda"):
         super(LogisticRegression, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim

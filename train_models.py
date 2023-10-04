@@ -1,47 +1,57 @@
-from dCAM.src.models.CNN_models import dResNetBaseline
+from dCAM.src.models.CNN_models import ResNetBaseline, ModelCNN
+from utils import transform_data4ResNet
 from models.MyMiniRocket import MyMiniRocket
 from load_data import load_data
 from utils import MyDataset
 import torch
 import numpy as np
 import timeit
+from sklearn.linear_model import RidgeClassifierCV
 
 def main():
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    #X_train,y_train,X_test,y_test,n_classes, n_channels,seq_len = load_data(device,"my_synth")
-    data, seq_len, n_channels, n_classes = load_data("tmp_synth_2lines")
-    # TODO remove the following!
-
-
-    n = 5000
-    data['train']['X']  = data['train']['X'][:n]
-    data['train']['y']  = data['train']['y'][:n]
-    data['test']['X']  = data['test']['X'][:n]
-    data['test']['y']  = data['test']['y'][:n]
+    train_X, train_y,test_X,test_y, seq_len, n_channels, n_classes = load_data("synth_2lines")
 
 
     miniRocket = MyMiniRocket("MiniRocket",n_channels,seq_len,n_classes)
-    X_train = torch.tensor(data['train']['X'] ).to(device)
-    X_test = torch.tensor(data['test']['X'] ).to(device)
+    X_train = torch.tensor( train_X ).to(device)
+    X_test = torch.tensor( test_X ).to(device)
 
     start = timeit.default_timer()
-    X_train, X_test = miniRocket.transform_dataset(X_train=X_train,X_test=X_test, chunksize=512)
-    y_train = torch.Tensor(data['train']['y'].astype(int)).type(torch.uint8).to(device)
-    y_test = torch.Tensor(data['test']['y'].astype(int)).type(torch.uint8).to(device)
+    X_train, X_test = miniRocket.transform_dataset(X_train=X_train,X_test=X_test, chunk_size=512,normalise=True)
+    y_train = torch.Tensor(train_y).type(torch.uint8).to(device)
+    y_test = torch.Tensor( test_y).type(torch.uint8).to(device)
     torch.cuda.empty_cache()
     print("trans in ", timeit.default_timer() - start)
 
     start = timeit.default_timer()
-    Cs = np.array( [10,100] )
-    print(Cs)
+    Cs = np.logspace(-4,4,10)
     miniRocket.train_regression( X_train, y_train, X_test, y_test,
-                                Cs =Cs,k=2,batch_size=128 )
-    exit()
+                                Cs =Cs,k=5,batch_size=128 )
     #probs = miniRocket( torch.Tensor( data['test']['X'] ). to("cuda")  )
     print("classifier in ", timeit.default_timer() - start)
-    torch.save(miniRocket,"RocketTrialCs10.pt")
-    a = 2
+    #torch.save(miniRocket,"saved_models/Rocket_1line_CS10.pt")
+
+
+    exit()
+
+
+    train_loader, test_loader,n_channels,n_classes, device, enc= (
+        transform_data4ResNet(train_X,train_y,test_X,test_y,device=device))
+    resNet = ResNetBaseline(n_channels, mid_channels=128,num_pred_classes= n_classes).to(device)
+    model = ModelCNN(model=resNet, n_epochs_stop=30,device=device)
+    acc = model.train(num_epochs=200,train_loader=train_loader,test_loader=test_loader)
+    print("resNet accuracy was ",acc)
+    #torch.save(model,"saved_models/resNet128_1line.pt")
+
+    train_X, train_y,test_X,test_y, seq_len, n_channels, n_classes = load_data("tmp_synth_2lines", concat=True)
+    print(train_X.shape,test_X.shape)
+    ridge = RidgeClassifierCV(alphas=np.logspace(-3, 3, 10),cv=5)
+    ridge.fit(train_X,train_y)
+    print("ridge accuracy was ",ridge.score(test_X,test_y))
+
 
 if __name__ == "__main__" :
     main()
