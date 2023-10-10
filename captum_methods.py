@@ -13,61 +13,42 @@ from captum.attr import (
     ShapleyValueSampling,
     FeaturePermutation
 )
-from utils import transform_data4ResNet
+from pytorch_utils import transform_data4ResNet, transform2tensors
 import timeit
+
 
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    _,_,X_test,y_test, seq_len, n_channels, n_classes = load_data("tmp_synth_1line")
+    X_train,y_train,X_test,y_test, seq_len, n_channels, n_classes = load_data("CMJ")
+    X_train,y_train,X_test,y_test, enc = transform2tensors(X_train,y_train,X_test,y_test,device=device)
+    #X_train,y_train,X_test,y_test, enc = transform_data4ResNet(X_train,y_train,X_test,y_test,device=device)
+
+    for saved_model_name in ["MiniRocket",  "ResNet",  "Rocket"]:
+
+        model = torch.load("saved_models/CMJ/"+saved_model_name+".pt", map_location=device)
+        baseline = torch.normal(mean=0, std=1, size=X_test[:1].shape).to(device)
+        expected_value = model(baseline.to(device))
+
+        for i in range(10):
+            samples = X_test[i:(i+1)]
+            labels =  y_test[i:(i+1)]       #labels has to be torch.int64
+
+            start = timeit.default_timer()
+            kernel_shap = KernelShap(model)
+
+            grouping = torch.zeros((1,3,384)).type(torch.int64).to(device)
+            grouping[0,1,:] = 1
+            grouping[0,2,:] = 2
 
 
-    miniRocket = torch.load("saved_models/MiniRocket_1line_CS10.pt")
-    baseline = torch.normal(mean=0, std=1, size=X_test[:2].shape).to("cuda")
-    expected_value = miniRocket(baseline.to("cuda"))
-    print(expected_value)
+            explanation = kernel_shap.attribute(samples, target=labels, baselines=baseline)
+            end = timeit.default_timer()
+            print( "explaining the instance ", i, "-th,using model ",saved_model_name, "took"
+                    ,(end-start), " seconds\n",samples.shape, explanation.shape)
+            print("output", len(torch.unique(explanation)) , explanation.shape )
 
-    samples = torch.tensor(X_test[100:102] ).to("cuda")
-    labels =  torch.Tensor( y_test[100:102].astype(int) ).type(torch.int64).to(device)
-
-    #out = miniRocket(samples)
-    #torch.autograd.grad(torch.unbind(out), samples)
-
-    #kwargs = {'baselines':baseline, 'return_convergence_delta':True}
-    #i = IntegratedGradients(miniRocket,multiply_by_inputs=True)
-    #out = i.attribute(samples, target=labels)#, baselines=baseline, return_convergence_delta=True)
-    print("\ncaptum:")
-    start = timeit.default_timer()
-    deeplift = ShapleyValueSampling(miniRocket)#,multiply_by_inputs = True)
-    tmp = deeplift.attribute(samples, target=labels)#, baselines=baseline)
-    #shap = ShapleyValueSampling(miniRocket)#, perturbations_per_eval=4)
-    #res = shap.attribute(samples,target=labels)
-    #metohd = LRP(miniRocket)
-    #res = metohd.attribute(samples, target=labels)
-    print(tmp.shape, (timeit.default_timer() - start))
-    """
-    X_test, y_test = torch.tensor(X_test).to(device), torch.tensor(y_test.astype(int)).to(device)
-    resNet = torch.load("saved_models/resNet.pt")
-    samples = X_test[:2]
-    labels = y_test[:2]
-    out = resNet.model( samples )
-
-    i =  ShapleyValueSampling(resNet.model) #DeepLift(resNet.model,multiply_by_inputs=True) #IntegratedGradients(resNet.model,multiply_by_inputs=True)
-    attr = i.attribute(samples, target=labels)
-    print( X_test[:2].shape,"\n\noutput:", out.shape ,out, "\n\nattribute:",attr.shape)
-    """
 
 if __name__ == "__main__" :
     main()
 
-
-"""
-    "integrated_gradients": {
-        "captum_method": IntegratedGradients,
-        "require_baseline": True,
-        "baseline_type": baseline_type,
-        "kwargs_method": {"multiply_by_inputs": bool_multiply_inputs},
-        "noback_cudnn": True,
-        "batch_size": 8,
-    },
-"""
