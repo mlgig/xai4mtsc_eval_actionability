@@ -2,12 +2,12 @@ from torch.cuda import empty_cache as empty_gpu_cache
 import torch.nn as nn
 from models.tsai.MINIROCKET_Pytorch import MiniRocketFeatures, get_minirocket_features
 from models.MyModels.LogisticRegression import LogisticRegression
-import numpy as np
-from utils import pre_fature_normalization, MyDataset
+import timeit
+from utils import MyDataset
 from torch.utils.data import  DataLoader
 import torch
-from models.tsai.ROCKET_Pytorch import ROCKET, get_rocket_features
-
+from models.tsai.ROCKET_Pytorch import ROCKET
+import numpy as np
 
 # TODO should I change module and file name??
 class MyMiniRocket(nn.Module):
@@ -36,6 +36,19 @@ class MyMiniRocket(nn.Module):
         probs = nn.functional.softmax( y, dim=-1 )
         return probs
 
+    def trainAndScore(self,X_train,y_train,X_test,y_test, normalise=True, chunk_size=512):
+        start = timeit.default_timer()
+        X_train_trans, X_test_trans = self.transform_dataset(X_train,X_test,chunk_size=chunk_size, normalise=normalise)
+        print("transformation done in ", timeit.default_timer() - start)
+        torch.cuda.empty_cache()
+
+        start = timeit.default_timer()
+        Cs = np.logspace(-4,4,10)
+        acc =  self.train_regression(X_train_trans, y_train, X_test_trans, y_test,Cs =Cs,k=5,batch_size=256 )
+        print("classifier in ", timeit.default_timer() - start, " accuracy of ",
+              type(self.transformer_model)," was ", acc)
+        return acc
+
     def transform_dataset(self,X_train,X_test,chunk_size,normalise):
 
         def transform_miniRocket(X_train,X_test, chunk_size,normalise):
@@ -48,11 +61,11 @@ class MyMiniRocket(nn.Module):
             empty_gpu_cache()
 
             if normalise:
-                X_train, X_test =  pre_fature_normalization(X_train_trans, X_test_trans)
+                X_train, X_test =  self.__pre_fature_normalization(X_train_trans, X_test_trans)
             else:
                 X_train, X_test =  X_train_trans, X_test_trans
 
-            return X_train , X_test
+            return X_train.squeeze() , X_test.squeeze()
 
         def transform_Rocket(X_train,X_test,normalise):
 
@@ -63,7 +76,7 @@ class MyMiniRocket(nn.Module):
             empty_gpu_cache()
 
             if normalise:
-                X_train, X_test =  pre_fature_normalization(X_train_trans, X_test_trans)
+                X_train, X_test =  self.__pre_fature_normalization(X_train_trans, X_test_trans)
             else:
                 X_train, X_test =  X_train_trans, X_test_trans
 
@@ -91,3 +104,11 @@ class MyMiniRocket(nn.Module):
 
         # and return the found accuracy
         return accuracy
+
+    def __pre_fature_normalization(self,X_train,X_test):
+        eps = 1e-6
+        f_mean = X_train.mean(axis=0, keepdims=True)
+        f_std = X_train.std(axis=0, keepdims=True) + eps  # epsilon to avoid dividing by 0
+        X_train_tfm2 = (X_train - f_mean) / f_std
+        X_test_tfm2 = (X_test - f_mean) / f_std
+        return  X_train_tfm2,X_test_tfm2
