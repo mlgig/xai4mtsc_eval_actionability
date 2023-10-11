@@ -12,7 +12,6 @@ from typing import cast, Union, List
 
 
 
-
 class ModelCNN():
 	def __init__(self,
 				 model,
@@ -20,7 +19,7 @@ class ModelCNN():
 				 save_path=None,
 				 device="cpu",
 				 criterion=nn.CrossEntropyLoss(),
-				 learning_rate=0.0001):
+				 learning_rate=0.00001):
 
 		self.model = model
 		self.n_epochs_stop = n_epochs_stop
@@ -131,6 +130,8 @@ class ModelCNN():
 
 			if current_val_accuracy>max_val_accuracy:
 				#np.sum(mean_loss_test) < min_val_loss:
+				if self.save_path!=None:
+					torch.save(self.model, self.save_path)
 				epochs_no_improve = 0
 				min_val_loss = np.sum(mean_loss_test)
 				max_val_accuracy = current_val_accuracy
@@ -139,6 +140,8 @@ class ModelCNN():
 				if epochs_no_improve == self.n_epochs_stop:
 					print("TRAIN EARLY STOPPED; best accuracy is {:.2f} best loss is {:.4f}"
 						  .format( max_val_accuracy,np.average(min_val_loss) ))
+					if self.save_path!=None:
+						self.model = torch.load(self.save_path)
 					break
 		return max_val_accuracy
 
@@ -151,6 +154,7 @@ class ModelCNN():
 				output = self.model(X.float()).to(self.device)
 				predictions.append(torch.max(output.data,1).indices)
 		return  torch.concat(predictions).cpu().numpy()
+
 
 # Model used for CNN baseline
 class ConvNet(nn.Module):
