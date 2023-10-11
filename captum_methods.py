@@ -20,12 +20,12 @@ import timeit
 def main():
 
     # set device, load and transform data
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu"# "cuda" if torch.cuda.is_available() else "cpu"
     X_train,y_train,X_test,y_test, seq_len, n_channels, n_classes = load_data("CMJ")
     X_train,y_train,X_test,y_test, enc = transform2tensors(X_train,y_train,X_test,y_test,device=device)
 
     # loading the models
-    for saved_model_name in ["MiniRocket_0_949",  "ResNet_128_3_949",  "Rocket_4_921"]:
+    for saved_model_name in ["MiniRocket",  "ResNet",  "Rocket"]:
         model = torch.load("saved_models/CMJ/"+saved_model_name+".pt",
             map_location=device) # using the map_location argument is possible to freely load your model in CPU or GPU
             # regardless of the device used to train it
