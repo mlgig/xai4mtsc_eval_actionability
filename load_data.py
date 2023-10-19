@@ -1,7 +1,7 @@
 import numpy as np
-from sktime.datasets  import  load_from_tsfile_to_dataframe
+#from sktime.datasets  import  load_from_tsfile_to_dataframe
 from os.path import join
-from sktime.datatypes._panel._convert import from_nested_to_3d_numpy
+#from sktime.datatypes._panel._convert import from_nested_to_3d_numpy
 
 def load_data(data_name, concat=False):
 
@@ -15,6 +15,7 @@ def load_data(data_name, concat=False):
 
         data = np.load(path+name,allow_pickle=True).item()
 
+        # TODO cancel this n
         n = 7500
         train_X  = data['train']['X'][:n]
         train_y  = data['train']['y'][:n]

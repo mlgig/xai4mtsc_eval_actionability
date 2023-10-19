@@ -16,11 +16,13 @@ def main():
 
     # TODO put back the correct datasets order
     # TODO avoid a lot of prints in the training stage
-    for dataset_name in [ 'CMJ', 'MP' , 'synth_1line','synth_2lines' ]:
-        train_X, train_y,test_X,test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
+    for dataset_name in ['synth_1line','synth_2lines', 'MP' ,'CMJ', ]:
+        train_X, train_y, test_X, test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
 
+        """
         for n in range(5):
 
+            
             for transformer in ["MiniRocket", "Rocket"]:
 
                 # TODO implement a method in MyModel taking care of both transforming dataset and
@@ -33,13 +35,16 @@ def main():
                 file_path= "//".join( ("saved_models",dataset_name,model_name) )
                 torch.save(miniRocket,file_path+".pt")
                 torch.cuda.empty_cache()
+        
 
 
-            # TODO check batch sizes and organise them accordingly to the dataset !
-            # dResNet
+        # TODO check batch sizes and organise them accordingly to the dataset !
+        # dResNet
+        train_loader, test_loader, enc= (
+            transform_data4ResNet(train_X,train_y,test_X,test_y,device=device, batch_s=(32,32)))
+
+        for n in range(5):
             for n_filters in [64,128]:
-                train_loader, test_loader, enc= (
-                    transform_data4ResNet(train_X,train_y,test_X,test_y,device=device, batch_s=(64,64)))
                 resNet = dResNetBaseline(n_channels, mid_channels=n_filters,num_pred_classes= n_classes).to(device)
                 model = ModelCNN(model=resNet, n_epochs_stop=50,device=device, save_path="saved_models/tmp.pt")
                 acc = model.train(num_epochs=301,train_loader=train_loader,test_loader=test_loader)
@@ -49,11 +54,13 @@ def main():
                 torch.cuda.empty_cache()
                 print("dResNet accuracy was ",acc)
 
+        """
+        # ResNet
+        train_loader, test_loader,enc = (
+            transform2tensors(train_X,train_y,test_X,test_y, batch_size=(128,128), device=device ))
 
-            # ResNet
+        for n in range(5):
             for n_filters in [64,128]:
-                train_loader, test_loader,enc = (
-                    transform2tensors(train_X,train_y,test_X,test_y, batch_size=(128,128), device=device ))
                 resNet = ResNetBaseline(n_channels, mid_channels=n_filters,num_pred_classes= n_classes).to(device)
                 model = ModelCNN(model=resNet, n_epochs_stop=50,device=device, save_path="saved_models/tmp.pt")
                 acc = model.train(num_epochs=301,train_loader=train_loader,test_loader=test_loader)
@@ -63,7 +70,7 @@ def main():
                 torch.cuda.empty_cache()
                 print("resNet accuracy was ",acc)
 
-        exit()
 
+        exit()
 if __name__ == "__main__" :
     main()
