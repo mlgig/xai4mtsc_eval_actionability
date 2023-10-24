@@ -26,7 +26,7 @@ captum_mthods = {
         {"method" :DeepLiftShap, "require_baseline":True, "batch_size":8},
         {"method" :IntegratedGradients, "require_baseline":False, "batch_size":4},
         {"method" :GradientShap, "require_baseline":True, "batch_size":16},
-        {"method" :Saliency, "require_baseline":False, "batch_size":16}
+        #{"method" :Saliency, "require_baseline":False, "batch_size":16}
     ],
     "permutation": [
         {"method" :KernelShap, "require_baseline":False, "batch_size":1},
@@ -45,7 +45,8 @@ def get_grouping4dResNet(sample):
 
 
 def main():
-
+    # TODO include just the correct classified?
+    # TODO take only one row in dResNet explanations
     # set device, load data
     device ="cuda" if torch.cuda.is_available() else "cpu"
     # TODO for loop for every dataset?
@@ -75,7 +76,7 @@ def main():
             explainer = method_dict["method"](model)
             batch_size = method_dict["batch_size"]
             explanations = []
-            limit = 2
+            limit = 100
 
             start = timeit.default_timer()
             for i in trange(0,limit,batch_size):
