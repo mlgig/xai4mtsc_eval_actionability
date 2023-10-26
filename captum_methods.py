@@ -19,6 +19,7 @@ from captum.attr import (
 )
 from pytorch_utils import transform_data4ResNet, transform2tensors
 import timeit
+from torch import nn
 
 captum_mthods = {
     "gradient" : [
@@ -26,14 +27,14 @@ captum_mthods = {
         {"method" :DeepLiftShap, "require_baseline":True, "batch_size":8},
         {"method" :IntegratedGradients, "require_baseline":False, "batch_size":4},
         {"method" :GradientShap, "require_baseline":True, "batch_size":16},
-        #{"method" :Saliency, "require_baseline":False, "batch_size":16}
+        {"method" :Saliency, "require_baseline":False, "batch_size":16}
     ],
     "permutation": [
-        {"method" :KernelShap, "require_baseline":False, "batch_size":1},
-        {"method" :Lime, "require_baseline":False, "batch_size":1},
         {"method" : FeatureAblation, "require_baseline":False, "batch_size":8},
         {"method" : FeaturePermutation, "require_baseline":False, "batch_size":16},
-        {"method" :ShapleyValueSampling, "require_baseline":False, "batch_size":1}
+        {"method" :KernelShap, "require_baseline":False, "batch_size":1},
+        {"method" :Lime, "require_baseline":False, "batch_size":1},
+        {"method" :ShapleyValueSampling, "require_baseline":False, "batch_size":4}
     ]
 }
 
@@ -45,7 +46,7 @@ def get_grouping4dResNet(sample):
 
 
 def main():
-    # TODO include just the correct classified?
+
     # TODO take only one row in dResNet explanations
     # set device, load data
     device ="cuda" if torch.cuda.is_available() else "cpu"
@@ -53,9 +54,10 @@ def main():
     dataset_name="synth_2lines"
     train_X,train_y,test_X,test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
 
-    for model_name in [ "dResNet_64_0_910.pt","ResNet.pt" ]:   # TODO change name for the saved model  " "dResNet_64_0_910.pt".pt",
+    for model_name in [ "dResNet.pt" ]:   # ,"dResNet.pt"
         # load the current model and transform the data accordingly
         model = torch.load( os.path.join( "saved_models" ,dataset_name ,model_name) )
+        model = nn.Sequential(model, nn.Softmax(dim=-1))
         if model_name.startswith("ResNet"):
             X_train,y_train,X_test,y_test, enc = transform2tensors(train_X,train_y,test_X,test_y,device=device)
         elif model_name.startswith("dResNet"):
@@ -66,17 +68,22 @@ def main():
 
         # dict for the attributions
         attributions = {}
-        methods2use = captum_mthods["gradient"]+captum_mthods["permutation"] if model_name.startswith("ResNet")\
+        # TODO delete following 2 lines
+        ground_truths= []
+        predictions = []
+        to_save = {"explanations": attributions, "ground_truth_labels":None,"predicted_labels":None}
+        methods2use = captum_mthods["gradient"]+captum_mthods["permutation"] if model_name.startswith("ResNet") \
             else captum_mthods["permutation"]
 
         for method_dict in methods2use:
 
+            # TODO to move
             # init misc
             method_name = str(method_dict["method"]).split(".")[-1][:-2]
             explainer = method_dict["method"](model)
             batch_size = method_dict["batch_size"]
             explanations = []
-            limit = 100
+            limit = 120
 
             start = timeit.default_timer()
             for i in trange(0,limit,batch_size):
@@ -85,6 +92,13 @@ def main():
                 samples = ( X_test[i:(i+min(batch_size,limit) )] ).clone().detach().requires_grad_(True).to(device)
                 labels =  y_test[i:(i+min(batch_size,limit) )].clone().detach().to(device)
                 baseline = torch.normal(mean=0, std=1, size=samples.shape).to(device)
+
+                # save ground truth label and model prediction
+                # TODO to do only at first time
+                if (to_save["ground_truth_labels"] is None and to_save["predicted_labels"] is None):
+                    output = model(samples)
+                    predictions.append(torch.argmax(output,dim=1).cpu().numpy())
+                    ground_truths.append(labels.cpu().numpy())
 
                 # set kwargs
                 kwargs = {}
@@ -98,16 +112,14 @@ def main():
                 explanations.append(explanation.cpu().detach().numpy())
 
             # measure time took by the method
+            to_save['ground_truth_labels'] = np.concatenate(ground_truths) ; to_save['predicted_labels']= np.concatenate(predictions)
             end = timeit.default_timer()
             attributions[method_name] = np.concatenate(explanations)
             print( "explaining the instance ", i, " using ", method_dict["method"] , "took",(end-start), " seconds\n",
                    "in shape:",samples.shape,"out shape:", explanation.shape,"\n")
 
         # TODO save in a separate folder
-
-
-
-        np.save("tmp.npy",attributions)
+        np.save("./explanations/synth_2lines/dResNet120.npy",to_save)
         """
         # explainin in chunks: chunk 0 from 0 t 100
         grouping = torch.zeros(1,3,384).type(torch.int64)
