@@ -34,10 +34,11 @@ captum_mthods = {
         {"method" : FeaturePermutation, "require_baseline":False, "batch_size":16},
         {"method" :KernelShap, "require_baseline":False, "batch_size":1},
         {"method" :Lime, "require_baseline":False, "batch_size":1},
-        {"method" :ShapleyValueSampling, "require_baseline":False, "batch_size":4}
+        {"method" :ShapleyValueSampling, "require_baseline":False, "batch_size":16}
     ]
 }
 
+limit = 300
 
 # TODO do I need it??
 def get_grouping4dResNet(sample):
@@ -54,17 +55,27 @@ def main():
     dataset_name="synth_2lines"
     train_X,train_y,test_X,test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
 
-    for model_name in [ "dResNet.pt" ]:   # ,"dResNet.pt"
+
+    for model_name in [ "ResNet.pt" ,"dResNet.pt"]:   # ,"dResNet.pt"
         # load the current model and transform the data accordingly
         model = torch.load( os.path.join( "saved_models" ,dataset_name ,model_name) )
         model = nn.Sequential(model, nn.Softmax(dim=-1))
+
+        # TODO not hard coded!
+        n_chunks = 50
+        groups = np.array( [ [i+j*n_chunks for i in range(n_chunks)] for j in range(8)] )
+        groups = np.expand_dims( np.repeat(groups,10,axis=1), 0)
+        print ( np.unique(groups ))
+
         if model_name.startswith("ResNet"):
             X_train,y_train,X_test,y_test, enc = transform2tensors(train_X,train_y,test_X,test_y,device=device)
+            groups = torch.tensor( groups,device=device)
+
         elif model_name.startswith("dResNet"):
-            sample = train_X[0]
+            dResNet_groups = transform_data4ResNet(groups,y_test=None, device=device,batch_s=None)
             _,_,X_test,y_test, enc = transform_data4ResNet(test_X,test_y,y_train=train_y,device=device, batch_s=None)
-            groups = get_grouping4dResNet(sample)
-            groups = transform_data4ResNet(groups,y_test=None,device=device,batch_s=None)
+            #groups = get_grouping4dResNet(sample)
+            #groups = transform_data4ResNet(groups,y_test=None,device=device,batch_s=None)
 
         # dict for the attributions
         attributions = {}
@@ -72,8 +83,7 @@ def main():
         ground_truths= []
         predictions = []
         to_save = {"explanations": attributions, "ground_truth_labels":None,"predicted_labels":None}
-        methods2use = captum_mthods["gradient"]+captum_mthods["permutation"] if model_name.startswith("ResNet") \
-            else captum_mthods["permutation"]
+        methods2use = captum_mthods["permutation"]
 
         for method_dict in methods2use:
 
@@ -83,7 +93,6 @@ def main():
             explainer = method_dict["method"](model)
             batch_size = method_dict["batch_size"]
             explanations = []
-            limit = 120
 
             start = timeit.default_timer()
             for i in trange(0,limit,batch_size):
@@ -105,7 +114,9 @@ def main():
                 if method_dict["require_baseline"]:
                     kwargs["baselines"] = baseline
                 if  model_name.startswith("dResNet"):
-                    kwargs["feature_mask"] = groups
+                    kwargs["feature_mask"] = dResNet_groups
+                else:
+                    kwargs["feature_mask"] =groups
 
                 # get the explanation and save it
                 explanation = explainer.attribute(samples, target=labels, **kwargs)#,feature_mask=groups)#, baselines=baseline)
@@ -118,8 +129,7 @@ def main():
             print( "explaining the instance ", i, " using ", method_dict["method"] , "took",(end-start), " seconds\n",
                    "in shape:",samples.shape,"out shape:", explanation.shape,"\n")
 
-        # TODO save in a separate folder
-        np.save("./explanations/synth_2lines/dResNet120.npy",to_save)
+            np.save("./explanations/synth_2lines/"+model_name+"_"+str(limit)+"_"+str(n_chunks)+"_8chunks.npy",to_save)
         """
         # explainin in chunks: chunk 0 from 0 t 100
         grouping = torch.zeros(1,3,384).type(torch.int64)
