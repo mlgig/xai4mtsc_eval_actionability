@@ -20,6 +20,7 @@ from captum.attr import (
 from pytorch_utils import transform_data4ResNet, transform2tensors
 import timeit
 from torch import nn
+from captum._utils.models.linear_model import *
 
 captum_mthods = {
     "gradient" : [
@@ -30,11 +31,11 @@ captum_mthods = {
         {"method" :Saliency, "require_baseline":False, "batch_size":16}
     ],
     "permutation": [
-        {"method" : FeatureAblation, "require_baseline":False, "batch_size":8},
-        {"method" : FeaturePermutation, "require_baseline":False, "batch_size":16},
-        {"method" :KernelShap, "require_baseline":False, "batch_size":1},
+        #{"method" : FeatureAblation, "require_baseline":False, "batch_size":32},
+        #{"method" : FeaturePermutation, "require_baseline":False, "batch_size":32},
+        #{"method" :KernelShap, "require_baseline":False, "batch_size":1},
         {"method" :Lime, "require_baseline":False, "batch_size":1},
-        {"method" :ShapleyValueSampling, "require_baseline":False, "batch_size":16}
+        #{"method" :ShapleyValueSampling, "require_baseline":False, "batch_size":32}
     ]
 }
 
@@ -55,81 +56,81 @@ def main():
     dataset_name="synth_2lines"
     train_X,train_y,test_X,test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
 
+    for n_chunks in [20,30,40,50,10]:
+        for model_name in [ "dResNet.pt", "ResNet.pt"] :
+            # load the current model and transform the data accordingly
+            model = torch.load( os.path.join( "saved_models" ,dataset_name ,model_name) )
+            model = nn.Sequential(model, nn.Softmax(dim=-1))
 
-    for model_name in [ "ResNet.pt" ,"dResNet.pt"]:   # ,"dResNet.pt"
-        # load the current model and transform the data accordingly
-        model = torch.load( os.path.join( "saved_models" ,dataset_name ,model_name) )
-        model = nn.Sequential(model, nn.Softmax(dim=-1))
+            # TODO not hard coded!
+            groups = np.array( [ [i+j*n_chunks for i in range(n_chunks)] for j in range(8)] )
+            # TODO 500 is hard coded!
+            groups = np.expand_dims( np.repeat(groups,np.ceil(500/n_chunks).astype(int),axis=1), 0)[:,:,:500]
 
-        # TODO not hard coded!
-        n_chunks = 50
-        groups = np.array( [ [i+j*n_chunks for i in range(n_chunks)] for j in range(8)] )
-        groups = np.expand_dims( np.repeat(groups,10,axis=1), 0)
-        print ( np.unique(groups ))
+            if model_name.startswith("ResNet"):
+                X_train,y_train,X_test,y_test, enc = transform2tensors(train_X,train_y,test_X,test_y,device=device)
+                groups = torch.tensor( groups,device=device)
 
-        if model_name.startswith("ResNet"):
-            X_train,y_train,X_test,y_test, enc = transform2tensors(train_X,train_y,test_X,test_y,device=device)
-            groups = torch.tensor( groups,device=device)
+            elif model_name.startswith("dResNet"):
+                dResNet_groups = transform_data4ResNet(groups,y_test=None, device=device,batch_s=None)
+                _,_,X_test,y_test, enc = transform_data4ResNet(test_X,test_y,y_train=train_y,device=device, batch_s=None)
+                #groups = get_grouping4dResNet(sample)
+                #groups = transform_data4ResNet(groups,y_test=None,device=device,batch_s=None)
 
-        elif model_name.startswith("dResNet"):
-            dResNet_groups = transform_data4ResNet(groups,y_test=None, device=device,batch_s=None)
-            _,_,X_test,y_test, enc = transform_data4ResNet(test_X,test_y,y_train=train_y,device=device, batch_s=None)
-            #groups = get_grouping4dResNet(sample)
-            #groups = transform_data4ResNet(groups,y_test=None,device=device,batch_s=None)
+            # dict for the attributions
+            attributions = {}
+            ground_truths= []
+            predictions = []
+            to_save = {"explanations": attributions, "ground_truth_labels":None,"predicted_labels":None}
+            methods2use = captum_mthods["permutation"]
 
-        # dict for the attributions
-        attributions = {}
-        # TODO delete following 2 lines
-        ground_truths= []
-        predictions = []
-        to_save = {"explanations": attributions, "ground_truth_labels":None,"predicted_labels":None}
-        methods2use = captum_mthods["permutation"]
+            for method_dict in methods2use:
 
-        for method_dict in methods2use:
+                # TODO to move
+                # init misc
+                method_name = str(method_dict["method"]).split(".")[-1][:-2]
+                explainer = method_dict["method"](model)
+                batch_size = method_dict["batch_size"]
+                explanations = []
 
-            # TODO to move
-            # init misc
-            method_name = str(method_dict["method"]).split(".")[-1][:-2]
-            explainer = method_dict["method"](model)
-            batch_size = method_dict["batch_size"]
-            explanations = []
+                start = timeit.default_timer()
+                for i in trange(0,limit,batch_size):
 
-            start = timeit.default_timer()
-            for i in trange(0,limit,batch_size):
+                    # take samples, label and baseline (same shape of the samples)
+                    samples = ( X_test[i:(min(i+batch_size,limit) )] ).clone().detach().requires_grad_(True).to(device)
+                    labels =  y_test[i:(min(i+batch_size,limit) )].clone().detach().to(device)
+                    baseline = torch.normal(mean=0, std=1, size=samples.shape).to(device)
 
-                # take samples, label and baseline (same shape of the samples)
-                samples = ( X_test[i:(i+min(batch_size,limit) )] ).clone().detach().requires_grad_(True).to(device)
-                labels =  y_test[i:(i+min(batch_size,limit) )].clone().detach().to(device)
-                baseline = torch.normal(mean=0, std=1, size=samples.shape).to(device)
+                    # save ground truth label and model prediction
+                    # TODO to do only at first time
+                    if (to_save["ground_truth_labels"] is None and to_save["predicted_labels"] is None):
+                        output = model(samples)
+                        predictions.append(torch.argmax(output,dim=1).cpu().numpy())
+                        ground_truths.append(labels.cpu().numpy())
 
-                # save ground truth label and model prediction
-                # TODO to do only at first time
-                if (to_save["ground_truth_labels"] is None and to_save["predicted_labels"] is None):
-                    output = model(samples)
-                    predictions.append(torch.argmax(output,dim=1).cpu().numpy())
-                    ground_truths.append(labels.cpu().numpy())
+                    # set kwargs
+                    kwargs = {}
+                    if method_dict["require_baseline"]:
+                        kwargs["baselines"] = baseline
+                    if  model_name.startswith("dResNet"):
+                        kwargs["feature_mask"] = dResNet_groups
+                    else:
+                        kwargs["feature_mask"] =groups
 
-                # set kwargs
-                kwargs = {}
-                if method_dict["require_baseline"]:
-                    kwargs["baselines"] = baseline
-                if  model_name.startswith("dResNet"):
-                    kwargs["feature_mask"] = dResNet_groups
-                else:
-                    kwargs["feature_mask"] =groups
+                    # get the explanation and save it
+                    explanation = explainer.attribute(samples, target=labels, **kwargs)
+                    explanations.append( explanation.cpu().detach().numpy()[:,0] ) if model_name.startswith("dResNet") \
+                        else explanations.append( explanation.cpu().detach().numpy() )
 
-                # get the explanation and save it
-                explanation = explainer.attribute(samples, target=labels, **kwargs)#,feature_mask=groups)#, baselines=baseline)
-                explanations.append(explanation.cpu().detach().numpy())
+                # measure time took by the method
+                end = timeit.default_timer()
+                to_save['ground_truth_labels'] = np.concatenate(ground_truths) ; to_save['predicted_labels']= np.concatenate(predictions)
+                attributions[method_name] = np.concatenate(explanations)
+                print( "explaining the instance ", i, " using ", method_dict["method"] , "took",(end-start), " seconds\n",
+                       "in shape:",samples.shape,"out shaape:", explanations[-1].shape,"\n")
 
-            # measure time took by the method
-            to_save['ground_truth_labels'] = np.concatenate(ground_truths) ; to_save['predicted_labels']= np.concatenate(predictions)
-            end = timeit.default_timer()
-            attributions[method_name] = np.concatenate(explanations)
-            print( "explaining the instance ", i, " using ", method_dict["method"] , "took",(end-start), " seconds\n",
-                   "in shape:",samples.shape,"out shape:", explanation.shape,"\n")
-
-            np.save("./explanations/synth_2lines/"+model_name+"_"+str(limit)+"_"+str(n_chunks)+"_8chunks.npy",to_save)
+            np.save("./explanations/synth_2lines/"+model_name+"_"
+                   +str(limit)+"_"+str(n_chunks)+"_8chunks.npy",to_save)
         """
         # explainin in chunks: chunk 0 from 0 t 100
         grouping = torch.zeros(1,3,384).type(torch.int64)
