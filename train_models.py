@@ -16,7 +16,7 @@ def main():
 
     # TODO put back the correct datasets order
     # TODO avoid a lot of prints in the training stage
-    for dataset_name in ['synth_1line','synth_2lines', 'MP' ,'CMJ', ]:
+    for dataset_name in ['CMJ', 'synth_1line','synth_2lines', 'MP' ,]:
         train_X, train_y, test_X, test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
 
         """
@@ -40,8 +40,9 @@ def main():
 
         # TODO check batch sizes and organise them accordingly to the dataset !
         # dResNet
-        train_loader, test_loader, enc= (
-            transform_data4ResNet(train_X,train_y,test_X,test_y,device=device, batch_s=(32,32)))
+        """
+        train_loader, test_loader, enc= transform_data4ResNet(X_train= train_X, y_train= train_y,
+                X_test= test_X, y_test= test_y,device=device, batch_s=(32,32))
 
         for n in range(5):
             for n_filters in [64,128]:
@@ -54,7 +55,7 @@ def main():
                 torch.cuda.empty_cache()
                 print("dResNet accuracy was ",acc)
 
-        """
+
         # ResNet
         train_loader, test_loader,enc = (
             transform2tensors(train_X,train_y,test_X,test_y, batch_size=(128,128), device=device ))
