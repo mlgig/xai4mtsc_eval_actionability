@@ -26,6 +26,7 @@ class LogisticRegression(torch.nn.Module):
         self.best_accuracy = 0.0
         self.best_loss = 0.0
         self.best_epoch = 0
+        #self.best_weights = None
         self.optimizer = torch.optim.Adam(self.parameters(), lr= learning_rate)
 
         self.to(device)
@@ -41,26 +42,32 @@ class LogisticRegression(torch.nn.Module):
             loss = self.criterion(output, y)
 
             loss.backward()
+            # TODO multiply loss by number of instance or not average doing self.criterion (reduce or reduction step)
             losses.append(loss.detach().cpu().numpy())
             self.optimizer.step()
         return  np.average( np.array(losses) )
 
     def __test_accuracy(self,val_loader):
+        outputs = []
         with torch.no_grad():
             for i,batch_data_val in enumerate(val_loader):
                 X_test, y_test = batch_data_val
                 output_test = self(X_test)
                 loss_test = self.criterion(output_test,y_test)
-                predicted_test = torch.max(output_test, axis=1)
-                test_acc = accuracy_score(y_test.cpu(), predicted_test.indices.cpu())
+                predicted_test = torch.argmax( output_test, axis=-1 )
+                outputs.append(predicted_test.cpu().numpy() )
 
-                if test_acc>self.best_accuracy:
-                    self.best_accuracy, self.best_loss = test_acc , loss_test.cpu().numpy()
-                else:
-                    self.no_improving_steps+=self.check_every
+        outputs = np.concatenate(outputs)
+        test_acc = accuracy_score(val_loader.dataset.y.cpu().numpy(), outputs )
+
+        if test_acc>self.best_accuracy:
+            self.best_accuracy, self.best_loss = test_acc , loss_test.cpu().numpy()
+            #self.best_weights = self.linear
+        else:
+            self.no_improving_steps+=1
 
 
-            return self.best_accuracy, self.no_improving_steps>= self.early_stop_after
+        return self.best_accuracy, self.no_improving_steps>= self.early_stop_after
 
 
     def __reset_model(self, C):
@@ -95,9 +102,9 @@ class LogisticRegression(torch.nn.Module):
 
 
     def forward(self, x):
-        scores = torch.sigmoid(self.linear(x))
+        scores = self.linear(x)
         # TODO should I give back the softmax?
-        #outputs = torch.softmax(scores, dim=-1)
+        #outputs = nn.functional.softmax( scores, dim=-1 )# torch.softmax(scores, dim=-1)
         return scores
 
     def validation(self,Cs, k, X_train, y_train, batch_size):
@@ -106,6 +113,7 @@ class LogisticRegression(torch.nn.Module):
 
         # splits data ino k folds
         for i in range(k):
+            # TODO shuffle tensors before k_fold split
             train_loader, val_loader = self.__Kfold_split(X_train,y_train,k=k,i=i,batch_size=batch_size)
 
             for j,C in enumerate(Cs):
@@ -116,13 +124,13 @@ class LogisticRegression(torch.nn.Module):
                 for epoch in range(self.max_epoch):
                     loss = self.__train_step(train_loader)
 
-                    if epoch % self.check_every ==0:
-                        accuracy, to_stop = self.__test_accuracy(val_loader)
-                        print("epoch", epoch, " accuracy ", accuracy, self.best_accuracy)
-                        if to_stop:
-                            print("EAERLY STOPPED AT", epoch, "\n\n")
-                            scores[j,i]+=[accuracy]
-                            break
+                    accuracy, to_stop = self.__test_accuracy(val_loader)
+                    if to_stop:
+                        print("EAERLY STOPPED AT", epoch, "\n\n")
+                        scores[j,i]+=[accuracy]
+                        break
+
+                print("trained finished",accuracy)
 
         avg_scores = np.average( scores, axis=-1)
         print("cv results:",avg_scores)
@@ -135,8 +143,10 @@ class LogisticRegression(torch.nn.Module):
 
         for epoch in range(self.max_epoch):
             self.__train_step(train_loader)
-            if epoch%self.check_every==0:
-                accuracy, to_stop = self.__test_accuracy(test_loader)
-                if to_stop:
-                    print("final accuracy", accuracy, self.best_accuracy, "epoch", epoch)
-                    return accuracy
+            accuracy, to_stop = self.__test_accuracy(test_loader)
+
+            if to_stop:
+                #self.linear = self.best_weights
+                #del self.best_weights
+                print("final accuracy", accuracy, self.best_accuracy, "epoch", epoch)
+                return accuracy

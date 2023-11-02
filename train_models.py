@@ -7,6 +7,7 @@ import os
 import numpy as np
 import timeit
 from sklearn.linear_model import RidgeClassifierCV
+from sklearn.metrics import accuracy_score
 from joblib import dump
 
 def main():
@@ -19,28 +20,36 @@ def main():
     for dataset_name in ['CMJ', 'synth_1line','synth_2lines', 'MP' ,]:
         train_X, train_y, test_X, test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
 
-        """
+
         for n in range(5):
-
             
-            for transformer in ["MiniRocket", "Rocket"]:
+            for transformer in ["MiniRocket"]:#, "Rocket"]:
 
-                # TODO implement a method in MyModel taking care of both transforming dataset and
-                # training the linear regression
                 X_train,y_train,X_test,y_test, enc = transform2tensors(train_X,train_y,test_X,test_y,device=device)
                 miniRocket = MyMiniRocket(transformer,n_channels,seq_len,n_classes)
                 acc = miniRocket.trainAndScore(X_train,y_train,X_test,y_test)
 
+                # TODO fix saving best model at the final training
+                # TODO decide whether or not to take the softmax or the raw scores
+                # TODO fix loss computations
+                # TODO check at how prediction is computed
+                # TODO  code refactoring
+                # TODO check whether rocket has a similar problem
+
+                scores_pred = miniRocket(X_test)
+                y_pred =torch.argmax(  scores_pred, axis=-1).cpu().numpy()
+                acc2 =  accuracy_score(test_y.astype(int), y_pred)
+                print(acc, acc2)
+
                 model_name = "_".join( (transformer, str(n), str(acc)[2:5] ) )
                 file_path= "//".join( ("saved_models",dataset_name,model_name) )
-                torch.save(miniRocket,file_path+".pt")
+                #torch.save(miniRocket,file_path+".pt")
                 torch.cuda.empty_cache()
-        
 
 
         # TODO check batch sizes and organise them accordingly to the dataset !
         # dResNet
-        """
+
         train_loader, test_loader, enc= transform_data4ResNet(X_train= train_X, y_train= train_y,
                 X_test= test_X, y_test= test_y,device=device, batch_s=(32,32))
 
@@ -51,7 +60,8 @@ def main():
                 acc = model.train(num_epochs=301,train_loader=train_loader,test_loader=test_loader)
                 model_name = "_".join( ("dResNet", str(n_filters), str(n), str(acc)[2:5] ) )
                 file_path= "/".join( ("saved_models",dataset_name,model_name) )
-                os.rename("saved_models/tmp.pt",file_path+".pt") #torch.save(resNet, file_path+".pt")
+                print(file_path)
+                #os.rename("saved_models/tmp.pt",file_path+".pt") #torch.save(resNet, file_path+".pt")
                 torch.cuda.empty_cache()
                 print("dResNet accuracy was ",acc)
 
@@ -67,7 +77,8 @@ def main():
                 acc = model.train(num_epochs=301,train_loader=train_loader,test_loader=test_loader)
                 model_name = "_".join( ("ResNet", str(n_filters), str(n), str(acc)[2:5] ) )
                 file_path= "/".join( ("saved_models",dataset_name,model_name) )
-                os.rename("saved_models/tmp.pt",file_path+".pt") #torch.save(resNet, file_path+".pt")
+                print(file_path)
+                #os.rename("saved_models/tmp.pt",file_path+".pt") #torch.save(resNet, file_path+".pt")
                 torch.cuda.empty_cache()
                 print("resNet accuracy was ",acc)
 

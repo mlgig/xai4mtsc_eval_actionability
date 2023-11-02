@@ -31,10 +31,9 @@ class MyMiniRocket(nn.Module):
         self.to(device)
 
     def forward(self,X):
-        X_trans = self.transformer_model(X)
+        X_trans,_ = self.transform_dataset(X,X,normalise=True,chunk_size=512)
         y = self.classifier(X_trans)
-        probs = nn.functional.softmax( y, dim=-1 )
-        return probs
+        return y
 
     def trainAndScore(self,X_train,y_train,X_test,y_test, normalise=True, chunk_size=512):
         start = timeit.default_timer()
@@ -43,8 +42,8 @@ class MyMiniRocket(nn.Module):
         torch.cuda.empty_cache()
 
         start = timeit.default_timer()
-        Cs = np.logspace(-4,4,10)
-        acc =  self.train_regression(X_train_trans, y_train, X_test_trans, y_test,Cs =Cs,k=5,batch_size=256 )
+        Cs = np.logspace(-1,1,3) #np.logspace(-4,4,10)
+        acc =  self.train_regression(X_train_trans, y_train, X_test_trans, y_test,Cs =Cs,k=5,batch_size=64 )
         print("classifier in ", timeit.default_timer() - start, " accuracy of ",
               type(self.transformer_model)," was ", acc)
         return acc
