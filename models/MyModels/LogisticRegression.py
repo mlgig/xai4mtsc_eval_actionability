@@ -4,11 +4,12 @@ import torch.nn as nn
 from sklearn.metrics import accuracy_score
 from utils import MyDataset
 from torch.utils.data import DataLoader
+from copy import deepcopy
 
 class LogisticRegression(torch.nn.Module):
 
     # TODO device to be set CPU and move the cuda parameter setting in main
-    def __init__(self, input_dim, output_dim,criterion,learning_rate= 0.0001,device="cuda"):
+    def __init__(self, input_dim, output_dim,criterion,learning_rate= 0.0001,device="cuda",verbose=False):
         super(LogisticRegression, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -16,6 +17,7 @@ class LogisticRegression(torch.nn.Module):
         self.criterion = criterion
         self.learning_rate = learning_rate
         self.device=device
+        self.verbose = verbose
 
         # TODO following 3 need to be pass as parameters in the constructor ?
         self.max_epoch = 300
@@ -26,7 +28,6 @@ class LogisticRegression(torch.nn.Module):
         self.best_accuracy = 0.0
         self.best_loss = 0.0
         self.best_epoch = 0
-        #self.best_weights = None
         self.optimizer = torch.optim.Adam(self.parameters(), lr= learning_rate)
 
         self.to(device)
@@ -62,7 +63,9 @@ class LogisticRegression(torch.nn.Module):
 
         if test_acc>self.best_accuracy:
             self.best_accuracy, self.best_loss = test_acc , loss_test.cpu().numpy()
-            #self.best_weights = self.linear
+            self.best_weights = deepcopy( self.linear )
+            #print( self.best_weights.bias[:3], self.best_weights.weight[0,:] )
+            self.no_improving_steps = 0
         else:
             self.no_improving_steps+=1
 
@@ -126,15 +129,15 @@ class LogisticRegression(torch.nn.Module):
 
                     accuracy, to_stop = self.__test_accuracy(val_loader)
                     if to_stop:
-                        print("EAERLY STOPPED AT", epoch, "\n\n")
+                        if self.verbose : print("EAERLY STOPPED AT", epoch, "\n\n")
                         scores[j,i]+=[accuracy]
                         break
 
-                print("trained finished",accuracy)
+                if self.verbose : print("trained finished",accuracy)
 
         avg_scores = np.average( scores, axis=-1)
-        print("cv results:",avg_scores)
-        best_idx  =np.argmax( avg_scores )
+        if self.verbose : print("cv results:",avg_scores)
+        best_idx = np.argmax( avg_scores )
         best_param = Cs[best_idx]
         return avg_scores[best_idx], best_param
 
@@ -146,7 +149,7 @@ class LogisticRegression(torch.nn.Module):
             accuracy, to_stop = self.__test_accuracy(test_loader)
 
             if to_stop:
-                #self.linear = self.best_weights
-                #del self.best_weights
+                self.linear = self.best_weights
+                del self.best_weights
                 print("final accuracy", accuracy, self.best_accuracy, "epoch", epoch)
                 return accuracy

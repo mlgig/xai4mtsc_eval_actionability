@@ -17,7 +17,7 @@ def main():
 
     # TODO put back the correct datasets order
     # TODO avoid a lot of prints in the training stage
-    for dataset_name in ['CMJ', 'synth_1line','synth_2lines', 'MP' ,]:
+    for dataset_name in ['CMJ', 'MP','synth_1line','synth_2lines']:
         train_X, train_y, test_X, test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
 
 
@@ -26,7 +26,8 @@ def main():
             for transformer in ["MiniRocket"]:#, "Rocket"]:
 
                 X_train,y_train,X_test,y_test, enc = transform2tensors(train_X,train_y,test_X,test_y,device=device)
-                miniRocket = MyMiniRocket(transformer,n_channels,seq_len,n_classes)
+
+                miniRocket = MyMiniRocket(transformer,n_channels,seq_len,n_classes,normalise=True,verbose=False)
                 acc = miniRocket.trainAndScore(X_train,y_train,X_test,y_test)
 
                 # TODO fix saving best model at the final training
@@ -35,18 +36,20 @@ def main():
                 # TODO check at how prediction is computed
                 # TODO  code refactoring
                 # TODO check whether rocket has a similar problem
+                # TODO uncomment "saving lines"
 
-                scores_pred = miniRocket(X_test)
-                y_pred =torch.argmax(  scores_pred, axis=-1).cpu().numpy()
-                acc2 =  accuracy_score(test_y.astype(int), y_pred)
-                print(acc, acc2)
+                for i in range(5):
+                    scores_pred = miniRocket(X_test)
+                    y_pred =torch.argmax( scores_pred, axis=-1 ).cpu().numpy()
+                    acc2 =  accuracy_score( enc.transform(test_y) , y_pred)
+                    print(acc, acc2)
 
-                model_name = "_".join( (transformer, str(n), str(acc)[2:5] ) )
+                model_name = "_".join( (transformer,"normalFalse", str(n), str(acc)[2:5] ) )
                 file_path= "//".join( ("saved_models",dataset_name,model_name) )
                 #torch.save(miniRocket,file_path+".pt")
                 torch.cuda.empty_cache()
 
-
+        continue
         # TODO check batch sizes and organise them accordingly to the dataset !
         # dResNet
 

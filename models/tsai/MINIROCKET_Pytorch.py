@@ -162,7 +162,7 @@ def get_minirocket_features(o, model, chunksize=1024, use_cuda=None, to_np=True)
     _features = []
     for oi in torch.split(o, chunksize):
         _features.append(model(oi))
-    features = torch.cat(_features).unsqueeze(-1)
+    features = torch.cat(_features)
     if to_np: return features.cpu().numpy()
     else: return features
 
