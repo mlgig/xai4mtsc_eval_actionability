@@ -31,7 +31,8 @@ class MyMiniRocket(nn.Module):
             self.intermediate_dim = 20000
         else:
             raise ValueError("transformer can be either MiniRocket or Rocket")
-        self.classifier = LogisticRegression(self.intermediate_dim, n_classes, nn.CrossEntropyLoss(), verbose=verbose)
+        self.classifier = LogisticRegression(self.intermediate_dim, n_classes, nn.CrossEntropyLoss(reduction="none"),
+                                             verbose=verbose)
         self.to(device)
         self.trained = False
 
@@ -49,11 +50,11 @@ class MyMiniRocket(nn.Module):
         torch.cuda.empty_cache()
 
         start = timeit.default_timer()
-        Cs = np.logspace(-1,1,2) ##np.logspace(-4,4,10)
-        acc =  self.train_regression(X_train_trans, y_train, X_test_trans, y_test,Cs =Cs,k=5,batch_size=64 )
+        Cs = np.logspace(-4,4,10)
+        acc =  self.train_regression(X_train_trans, y_train, X_test_trans, y_test,Cs =Cs,k=5,batch_size= 256 )
         print("classifier in ", timeit.default_timer() - start, " accuracy of ",
               type(self.transformer_model)," was ", acc)
-        #print("train",X_train_trans[0])
+
         return acc
 
     def transform_dataset(self,X_train,X_test,chunk_size,normalise):
@@ -108,7 +109,8 @@ class MyMiniRocket(nn.Module):
         # final train using the hole train set based on the C previously found
         train_loader = DataLoader( MyDataset(X_train,y_train), batch_size=batch_size,  shuffle=True)
         test_loader = DataLoader( MyDataset(X_test,y_test), batch_size=X_test.shape[0],  shuffle=False)
-        self.classifier = LogisticRegression(self.intermediate_dim,n_classes,nn.CrossEntropyLoss())
+        self.classifier = LogisticRegression(self.intermediate_dim,n_classes,nn.CrossEntropyLoss(reduction="none"),
+                                             verbose=False)
         self.classifier.optimizer = torch.optim.Adam(self.parameters(), lr=self.classifier.learning_rate ,weight_decay=1/best_C)
         accuracy = self.classifier.final_train(train_loader,test_loader)
 

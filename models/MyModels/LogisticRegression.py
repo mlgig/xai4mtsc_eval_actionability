@@ -38,15 +38,15 @@ class LogisticRegression(torch.nn.Module):
         for i,batch_data_train in enumerate(train_loader):
             X,y = batch_data_train
             self.optimizer.zero_grad()
-            # TODO check the following self(X)
+
             output = self(X)
             loss = self.criterion(output, y)
 
-            loss.backward()
-            # TODO multiply loss by number of instance or not average doing self.criterion (reduce or reduction step)
-            losses.append(loss.detach().cpu().numpy())
+            loss.mean().backward()
+            losses.append(loss)
             self.optimizer.step()
-        return  np.average( np.array(losses) )
+
+        return  torch.concat( losses ).mean().detach().cpu().numpy()
 
     def __test_accuracy(self,val_loader):
         outputs = []
