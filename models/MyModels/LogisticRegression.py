@@ -9,7 +9,7 @@ from copy import deepcopy
 class LogisticRegression(torch.nn.Module):
 
     # TODO device to be set CPU and move the cuda parameter setting in main
-    def __init__(self, input_dim, output_dim,criterion,learning_rate= 0.0001,device="cuda",verbose=False):
+    def __init__(self, input_dim, output_dim,criterion,learning_rate= 0.0001,device="cpu",verbose=False):
         super(LogisticRegression, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim

@@ -32,7 +32,7 @@ class MyMiniRocket(nn.Module):
         else:
             raise ValueError("transformer can be either MiniRocket or Rocket")
         self.classifier = LogisticRegression(self.intermediate_dim, n_classes, nn.CrossEntropyLoss(reduction="none"),
-                                             verbose=verbose)
+                                             verbose=verbose, device=self.device)
         self.to(device)
         self.trained = False
 
@@ -51,7 +51,7 @@ class MyMiniRocket(nn.Module):
 
         start = timeit.default_timer()
         Cs = np.logspace(-4,4,10)
-        acc =  self.train_regression(X_train_trans, y_train, X_test_trans, y_test,Cs =Cs,k=5,batch_size= 256 )
+        acc =  self.train_regression(X_train_trans, y_train, X_test_trans, y_test,Cs =Cs,k=5,batch_size= 512 )
         print("classifier in ", timeit.default_timer() - start, " accuracy of ",
               type(self.transformer_model)," was ", acc)
 
@@ -66,9 +66,11 @@ class MyMiniRocket(nn.Module):
                 self.trained = True
 
             # transforming features
-            X_train_trans = get_minirocket_features(X_train, self.transformer_model, chunksize=chunk_size, to_np=False)
+            X_train_trans = get_minirocket_features(X_train, self.transformer_model,device=self.device,
+                                                    chunksize=chunk_size, to_np=False)
             empty_gpu_cache()
-            X_test_trans = get_minirocket_features(X_test, self.transformer_model, chunksize=chunk_size, to_np=False)
+            X_test_trans = get_minirocket_features(X_test, self.transformer_model, device=self.device,
+                                                   chunksize=chunk_size, to_np=False)
             empty_gpu_cache()
 
             if normalise:
@@ -110,7 +112,7 @@ class MyMiniRocket(nn.Module):
         train_loader = DataLoader( MyDataset(X_train,y_train), batch_size=batch_size,  shuffle=True)
         test_loader = DataLoader( MyDataset(X_test,y_test), batch_size=X_test.shape[0],  shuffle=False)
         self.classifier = LogisticRegression(self.intermediate_dim,n_classes,nn.CrossEntropyLoss(reduction="none"),
-                                             verbose=False)
+                                             verbose=False,device=self.device)
         self.classifier.optimizer = torch.optim.Adam(self.parameters(), lr=self.classifier.learning_rate ,weight_decay=1/best_C)
         accuracy = self.classifier.final_train(train_loader,test_loader)
 

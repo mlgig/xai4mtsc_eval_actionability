@@ -3,25 +3,19 @@ from pytorch_utils import transform_data4ResNet, transform2tensors
 from models.MyModels.MyMiniRocket import MyMiniRocket
 from load_data import load_data
 import torch
-import os
-import numpy as np
-import timeit
-from sklearn.linear_model import RidgeClassifierCV
-from sklearn.metrics import accuracy_score
-from joblib import dump
 
 def main():
 
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    for dataset_name in ['synth_1line','synth_2lines']:
+    for dataset_name in ['CMJ','MP','synth_1line','synth_2lines']:
         train_X, train_y, test_X, test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
 
 
-        for n in range(5):
+        for n in range(1):
             
-            for transformer in ["MiniRocket"]:#, "Rocket","MiniRocket"]:
+            for transformer in [ "MiniRocket", "Rocket",]:
 
                 X_train,y_train,X_test,y_test, enc = transform2tensors(train_X,train_y,test_X,test_y,device=device)
                 miniRocket = MyMiniRocket(transformer,n_channels,seq_len,n_classes,normalise=True,verbose=False,
@@ -30,7 +24,7 @@ def main():
 
                 model_name = "_".join( (transformer,"normalTrue", str(n), str(acc)[2:5] ) )
                 file_path= "//".join( ("saved_models",dataset_name,model_name) )
-                torch.save(miniRocket,file_path+".pt")
+                #torch.save(miniRocket,file_path+".pt")
                 torch.cuda.empty_cache()
 
 
