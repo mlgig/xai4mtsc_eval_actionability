@@ -31,15 +31,15 @@ captum_mthods = {
         {"method" :Saliency, "require_baseline":False, "batch_size":16}
     ],
     "permutation": [
-        #{"method" : FeatureAblation, "require_baseline":False, "batch_size":32},
-        #{"method" : FeaturePermutation, "require_baseline":False, "batch_size":32},
-        #{"method" :KernelShap, "require_baseline":False, "batch_size":1},
+        {"method" : FeatureAblation, "require_baseline":False, "batch_size":16},
+        {"method" : FeaturePermutation, "require_baseline":False, "batch_size":16},
+        {"method" :KernelShap, "require_baseline":False, "batch_size":1},
         {"method" :Lime, "require_baseline":False, "batch_size":1},
-        #{"method" :ShapleyValueSampling, "require_baseline":False, "batch_size":32}
+        {"method" :ShapleyValueSampling, "require_baseline":False, "batch_size":16}
     ]
 }
 
-limit = 300
+limit = 10
 
 # TODO do I need it??
 def get_grouping4dResNet(sample):
@@ -53,27 +53,28 @@ def main():
     # set device, load data
     device ="cuda" if torch.cuda.is_available() else "cpu"
     # TODO for loop for every dataset?
-    dataset_name="synth_2lines"
+    dataset_name="CMJ"
     train_X,train_y,test_X,test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
 
-    for n_chunks in [20,30,40,50,10]:
+    for n_chunks in [5,10,20,30]:
         for model_name in [ "dResNet.pt", "ResNet.pt"] :
             # load the current model and transform the data accordingly
             model = torch.load( os.path.join( "saved_models" ,dataset_name ,model_name) )
             model = nn.Sequential(model, nn.Softmax(dim=-1))
 
-            # TODO not hard coded!
-            groups = np.array( [ [i+j*n_chunks for i in range(n_chunks)] for j in range(8)] )
-            # TODO 500 is hard coded!
-            groups = np.expand_dims( np.repeat(groups,np.ceil(500/n_chunks).astype(int),axis=1), 0)[:,:,:500]
+            # TODO everything is hardcoded here: n_chunks?, 384,3 etc.
+            groups = np.array( [ [i+j*n_chunks for i in range(n_chunks)] for j in range(3)] )
+            groups = np.expand_dims( np.repeat(groups,np.ceil( 384 /n_chunks).astype(int),axis=1), 0)[:,:,:384]
+
 
             if model_name.startswith("ResNet"):
-                X_train,y_train,X_test,y_test, enc = transform2tensors(train_X,train_y,test_X,test_y,device=device)
+                X_train,y_train,X_test,y_test, enc = transform2tensors(X_train=train_X,y_train= train_y,
+                            X_test=test_X,y_test=test_y,device=device)
                 groups = torch.tensor( groups,device=device)
 
             elif model_name.startswith("dResNet"):
                 dResNet_groups = transform_data4ResNet(groups,y_test=None, device=device,batch_s=None)
-                _,_,X_test,y_test, enc = transform_data4ResNet(test_X,test_y,y_train=train_y,device=device, batch_s=None)
+                _,_,X_test,y_test, enc = transform_data4ResNet( X_test= test_X,y_test=test_y,y_train=train_y,device=device, batch_s=None)
                 #groups = get_grouping4dResNet(sample)
                 #groups = transform_data4ResNet(groups,y_test=None,device=device,batch_s=None)
 
@@ -129,21 +130,10 @@ def main():
                 print( "explaining the instance ", i, " using ", method_dict["method"] , "took",(end-start), " seconds\n",
                        "in shape:",samples.shape,"out shaape:", explanations[-1].shape,"\n")
 
-            np.save("./explanations/synth_2lines/"+model_name+"_"
+            # TODO hard coded dataset name!
+            np.save("./explanations/CMJ/"+model_name+"_"
                    +str(limit)+"_"+str(n_chunks)+"_8chunks.npy",to_save)
-        """
-        # explainin in chunks: chunk 0 from 0 t 100
-        grouping = torch.zeros(1,3,384).type(torch.int64)
-        grouping[:,:,100:200] = 1   #chunk 1 from 100 t 200
-        grouping[:,:,200:300] = 2   #chunk 2 from 200 t 300
-        grouping[:,:,300:] = 3      #chunk 3 from 300 on
 
-        start = timeit.default_timer()
-        explanation_grouped = kernel_shap.attribute(samples, target=labels, baselines=baseline, feature_mask=grouping)
-        end = timeit.default_timer()
-        print( "grouped explanation: in shape:", samples.shape, "out shape:", explanation_grouped.shape,
-               " but n. different elements", len(torch.unique(explanation_grouped)), "time was ", (end-start) ),"\n\n\n"
-        """
 
 if __name__ == "__main__" :
     main()

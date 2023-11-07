@@ -3,7 +3,8 @@ import numpy as np
 from sklearn.metrics import (precision_recall_fscore_support,
                              confusion_matrix,average_precision_score, roc_auc_score,
                              multilabel_confusion_matrix,roc_auc_score,average_precision_score)
-from utils import plot
+from utils import minMax_normalization
+
 
 threshold = 0.5
 # TODO delete limit!
@@ -34,9 +35,7 @@ def common_correct_classified(data):
 
     return correct_classified
 
-def minMax_normalization(x):
-    x = (x - x.min() ) / (x.max() - x.min())
-    return x.flatten()
+
 
 def compute_metrics(gts,exps, model, exp_name, toAnalyze,X):
 
@@ -50,7 +49,7 @@ def compute_metrics(gts,exps, model, exp_name, toAnalyze,X):
             current_idx = toAnalyze[i]
             current_gt = gts[current_idx].flatten()
 
-            current_exp = minMax_normalization(exps[current_idx])
+            current_exp = minMax_normalization(exps[current_idx]).flatten()
 
             importants = (current_exp>=threshold).astype(int)
 
@@ -62,12 +61,11 @@ def compute_metrics(gts,exps, model, exp_name, toAnalyze,X):
             ## compute curves
             roc += roc_auc_score(current_gt,current_exp,average="samples")
             ap += average_precision_score(current_gt,current_exp,average="samples")
-
         except ValueError:
             print("error at index ",current_idx)
 
         i+=1
-
+    
     roc /= limit ; ap/=limit
     precision /= limit ; recall /= limit ;
     f1 = 2*(precision*recall) / (precision+recall)
@@ -89,7 +87,7 @@ def main():
         # load all the explanations for a single model
         models = os.listdir( os.path.join( exp_base_path,dataset_name ))
         # TODO delete
-        models.remove("old");  models.remove("old_old_ones"), models.remove("tmp"); models.remove("chunks")
+        #models.remove("old");  models.remove("old_old_ones"), models.remove("tmp"); models.remove("chunks")
         data = {}
 
         for model in models:

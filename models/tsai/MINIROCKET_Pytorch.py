@@ -153,10 +153,9 @@ class MiniRocketFeatures(nn.Module):
 MRF = MiniRocketFeatures
 
 # %% ../../nbs/056_models.MINIROCKET_Pytorch.ipynb 5
-def get_minirocket_features(o, model, chunksize=1024, use_cuda=None, to_np=True):
+def get_minirocket_features(o, model,device="cpu", chunksize=1024, use_cuda=None, to_np=True):
     """Function used to split a large dataset into chunks, avoiding OOM error."""
     use = torch.cuda.is_available() if use_cuda is None else use_cuda
-    device = torch.device(torch.cuda.current_device()) if use else torch.device('cpu')
     model = model.to(device)
     if isinstance(o, np.ndarray): o = torch.from_numpy(o).to(device)
     _features = []
