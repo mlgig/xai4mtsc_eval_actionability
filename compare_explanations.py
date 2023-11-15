@@ -39,10 +39,22 @@ def common_correct_classified(data):
 
 def compute_metrics(gts,exps, model, exp_name, toAnalyze,X):
 
+    exps_normalized = []
+    gts_toAnlyzed = []
+    for i in range(toAnalyze.shape[0]):
+        current_idx = toAnalyze[i]
+        exps_normalized.append( minMax_normalization(exps[current_idx]).flatten() )
+        gts_toAnlyzed.append( gts[current_idx].flatten() )
+    exps_normalized = np.array( exps_normalized ) ; gts_toAnlyzed = np.array(gts_toAnlyzed)
+
+    roc = roc_auc_score(gts_toAnlyzed,exps_normalized,average="samples")
+    ap =  average_precision_score( gts_toAnlyzed, exps_normalized, average="samples")
+    print(model,"\t", exp_name,"\t",ap,"\t",roc)
+    """
     i = 0
     precision=0; recall = 0 ; f1 = 0
     roc = 0 ; ap= 0
-    j=0
+    j=0 
     while i < limit:
         # preprocessing gts and preds
         try:
@@ -69,9 +81,10 @@ def compute_metrics(gts,exps, model, exp_name, toAnalyze,X):
     roc /= limit ; ap/=limit
     precision /= limit ; recall /= limit ;
     f1 = 2*(precision*recall) / (precision+recall)
-    print(model+ " \t"+exp_name+"\t {:.3f} \t {:.3f} \t{:.3f} \t{:.3f} \t{:.3f}".format(precision,
-                                                                                        recall,f1,ap,roc) )
-    return 2
+    #print(model+ " \t"+exp_name+"\t {:.3f} \t {:.3f} \t{:.3f} \t{:.3f} \t{:.3f}".format(precision,
+    #                                                                                    recall,f1,ap,roc) )
+    print(model+ " \t"+exp_name+"\t {:.3f} \t {:.3f} ".format(ap,roc) )
+    """
 
 def main():
     exp_base_path = "./explanations/"
@@ -87,7 +100,7 @@ def main():
         # load all the explanations for a single model
         models = os.listdir( os.path.join( exp_base_path,dataset_name ))
         # TODO delete
-        #models.remove("old");  models.remove("old_old_ones"), models.remove("tmp"); models.remove("chunks")
+        models.remove("all_items");  models.remove("old_chunks"),# models.remove("tmp"); models.remove("chunks")
         data = {}
 
         for model in models:
@@ -95,11 +108,12 @@ def main():
             data[model] = np.load( os.path.join( exp_base_path, dataset_name, model ) , allow_pickle=True ).item()
 
         toAnalyze = common_correct_classified(data)
-        print(toAnalyze)
         data = add_random_explanation(data)
 
         for model in data:
             for current_exps_name in data[model]["explanations"].keys():
+                if current_exps_name.lower()=="lime":
+                    continue
                 current_exps = data[model]["explanations"][current_exps_name]
                 compute_metrics(exp_ground_truths,current_exps,model ,current_exps_name, toAnalyze,X)
             print("\n\n\n")

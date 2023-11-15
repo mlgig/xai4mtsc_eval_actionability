@@ -38,14 +38,13 @@ class MyMiniRocket(nn.Module):
 
     def forward(self,X):
         X_trans,_ = self.transform_dataset(X,X,normalise=self.normalise,chunk_size=self.chunk_size)
-        #print("test",X_trans[0])
         y = self.classifier(X_trans)
         return y
 
     def trainAndScore(self,X_train,y_train,X_test,y_test):
         start = timeit.default_timer()
         X_train_trans, X_test_trans = self.transform_dataset(X_train,X_test,
-                    chunk_size=self.chunk_size, normalise=self.normalise)
+                                                             chunk_size=self.chunk_size, normalise=self.normalise)
         print("transformation done in ", timeit.default_timer() - start)
         torch.cuda.empty_cache()
 

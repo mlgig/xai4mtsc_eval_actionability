@@ -1,6 +1,7 @@
 from sklearn.preprocessing import LabelEncoder
 from torch.utils import data
-
+import matplotlib.pyplot as plt
+import numpy as np
 
 def gen_cube(instance):
     result = []
@@ -24,6 +25,33 @@ def pre_fature_normalization(X_train,X_test):
     X_train_tfm2 = (X_train - f_mean) / f_std
     X_test_tfm2 = (X_test - f_mean) / f_std
     return  X_train_tfm2,X_test_tfm2
+
+def plot_dCAM( instance, dcam, nb_dim, idx ):
+    plt.figure(figsize=(20,5))
+    plt.title('multivariate data series')
+    for i in range(len(instance)):
+        plt.subplot(len(instance),1,1+i)
+        plt.plot(instance[i])
+        plt.xlim(0,len(instance[i]))
+        plt.yticks([0],["Dim {}".format(i)])
+
+    plt.figure(figsize=(20,5))
+    #plt.title('dCAM')
+    plt.imshow(dcam,aspect='auto',interpolation=None)
+    plt.yticks(list(range(nb_dim)), ["Dim {}".format(i) for i in range(nb_dim)])
+    plt.savefig("tmp/"+str(idx)+".png")
+    #plt.colorbar(img)
+
+
+def minMax_normalization(X):
+    X  = np.abs(X)
+    #zeros = np.zeros(shape=X.shape)
+    #X = np.minimum(X,zeros)
+    X = (X - X.min() ) / (X.max() - X.min())
+    return X
+
+
+
 
 
 class MyDataset(data.Dataset):
