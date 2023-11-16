@@ -115,31 +115,26 @@ def running_captum_XAI(X_test,y_test,  model, model_name, device,  attributions,
     # measure time took by the method
     end = timeit.default_timer()
     attributions[method_name] = np.concatenate(explanations)
-    print("\n", model_name, method_name, "took", (end - start), " seconds")
+    print("\t", model_name, method_name, "took", (end - start), " seconds")
 
 
 
 def main():
 
-    # TODO take only one row in dResNet explanations
-    # set device, load data
     device ="cuda" if torch.cuda.is_available() else "cpu"
 
     # TODO for loop for every dataset?
     dataset_name="synth_2lines"
     train_X,train_y,test_X,test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
-
-    # TODO take the whole test set
     test_X = test_X[:100] ; test_y = test_y[:100]
 
     for n_chunks in [10,-1]:     #[5,10,15,20-1]
-        for model_name in [ "dResNet", "ResNet", "MiniRocket"] :
+        for model_name in["ResNet"]: # [ "dResNet", "ResNet", "MiniRocket"] :
 
             # load the current model and transform the data accordingly
             model = torch.load( os.path.join( "saved_models" ,dataset_name ,model_name+".pt") )
             model = nn.Sequential(model, nn.Softmax(dim=-1))
-
-            groups = get_groups(5,n_channels,seq_len)
+            groups = get_groups(n_chunks,n_channels,seq_len)
 
             X_test, y_test, groups = load_dataset(device, groups, model_name, test_X, test_y, train_X,train_y)
 
@@ -150,7 +145,7 @@ def main():
             attributions = {}
             to_save = {"explanations": attributions, "ground_truth_labels":[],"predicted_labels":[]}
             accuracy = compute_outputs( model, X_test, y_test,batch_size=32, to_save=to_save, device=device)
-            print("\t",model_name,n_chunks, "accuracy is",accuracy)
+            print("\n",model_name,n_chunks, "accuracy is",accuracy)
 
             for method_dict in methods2use:
                 running_captum_XAI(X_test,y_test, model, model_name, device,attributions,n_chunks!=-1, groups,method_dict)
