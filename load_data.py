@@ -3,24 +3,22 @@ from sktime.datasets  import  load_from_tsfile_to_dataframe
 from os.path import join
 from sktime.datatypes._panel._convert import from_nested_to_3d_numpy
 
-def load_data(data_name, concat=False):
+def load_data(data_name, concat=False , explanation_gt=False):
 
     if data_name.startswith("synth"):
         # synthetic datasets
         path="./datasets/synthetics/"
         if data_name=="synth_1line":
-            name = "synth_2lines.npy"
-        elif data_name=="synth_2lines":
             name = "synth_1line.npy"
+        elif data_name=="synth_2lines":
+            name = "synth_2lines.npy"
 
         data = np.load(path+name,allow_pickle=True).item()
 
-        # TODO cancel this n
-        n = 7500
-        train_X  = data['train']['X'][:n]
-        train_y  = data['train']['y'][:n]
-        test_X  = data['test']['X'][:n]
-        test_y = data['test']['y'][:n]
+        train_X  = data['train']['X']
+        train_y  = data['train']['y']
+        test_X  = data['test']['X']
+        test_y = data['test']['y']
 
     elif data_name=="CMJ":
         # Counter Movement Jump
@@ -51,7 +49,7 @@ def load_data(data_name, concat=False):
         test_X = from_nested_to_3d_numpy( test_X[columns_subset])
 
     else:
-        raise Exception("data_name must 'synth_1line', 'synth_2lines' , 'CMJ' or 'MP' ")
+        raise Exception("data_name must be either'synth_1line', 'synth_2lines' , 'CMJ' or 'MP' ")
 
     # transform (in case) and get info
     if concat:
@@ -62,5 +60,7 @@ def load_data(data_name, concat=False):
     n_channels = train_X.shape[-2]
     n_classes = len( np.unique(train_y) )
 
-
-    return  train_X, train_y, test_X, test_y, seq_len, n_channels, n_classes
+    if explanation_gt and data_name.startswith("synth"):
+        return  test_X, test_y, data["test"]['ground_truth'] , seq_len, n_channels, n_classes
+    else:
+        return  train_X, train_y, test_X, test_y, seq_len, n_channels, n_classes
