@@ -13,17 +13,17 @@ def main():
     for dataset_name in ['synth_1line', 'synth_2lines']:
         train_X, train_y, test_X, test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
         transform_data_dResnet = lambda : transform_data4ResNet(X_train= train_X, y_train= train_y,
-                                             X_test= test_X, y_test= test_y,device=device, batch_s=(128,128))
+                                             X_test= test_X, y_test= test_y,device=device, batch_s=(32,32))
         transform_data_resnet = lambda : transform2tensors(train_X,train_y,test_X,test_y, batch_size=(128,128), device=device )
 
 
         for n in range(1):
             # dResNet / resMet
 
-            for model_n in ["resNet","dResNet"]:
+            for model_n in ["dResNet","ResNet"]:
                 for n_filters in [64]:
 
-                    if model_n=="resNet":
+                    if model_n=="ResNet":
                         train_loader, test_loader, enc= transform_data_resnet()
                         resNet = ResNetBaseline(n_channels, mid_channels=n_filters,num_pred_classes= n_classes).to(device)
                     else:
