@@ -30,27 +30,24 @@ def main():
                                                            device=device )
 
 
-        for n in range(3):
+        for n in range(5):
 
-            for norm in [True,False]:
-                # con trans
-                current_params = deepcopy(conTran_param.params)
-                device, seed = Initialization(current_params)
-                train_loader,test_loader, current_params = transform4ConvTran( train_X, train_y,test_X, test_y,
-                                                                               current_params,n_classes)
-                model = ConvTran(current_params, num_classes=n_classes).to(device)
-                current_params['Norm'] = norm
-                optimizer = torch.optim.Adam(model.parameters())
+            # convTran
+            current_params = deepcopy(conTran_param.params)
+            device, seed = Initialization(current_params)
+            train_loader,test_loader, current_params = transform4ConvTran( train_X, train_y,test_X, test_y,
+                                                                current_params,n_classes,batch_s=(32,32))
+            model = ConvTran(current_params, num_classes=n_classes).to(device)
+            optimizer = torch.optim.Adam(model.parameters())
 
-                trainer = SupervisedTrainer(model, train_loader, device,current_params['loss_module'],optimizer,
-                                            l2_reg=0, print_interval=10, console=False, print_conf_mat=False)
-                test_evaluator = SupervisedTrainer(model, test_loader, device, current_params['loss_module']
-                                                ,optimizer,print_interval=10, console=False,print_conf_mat=False)
+            trainer = SupervisedTrainer(model, train_loader, device,current_params['loss_module'],optimizer,
+                                        l2_reg=0, print_interval=10, console=False, print_conf_mat=False)
+            test_evaluator = SupervisedTrainer(model, test_loader, device, current_params['loss_module']
+                                            ,optimizer,print_interval=10, console=False,print_conf_mat=False)
 
-                file_name = "_".join( ("ConvTrans",str(n),"norm",str(norm),".pt") )
-                file_path= "/".join( ("saved_models",dataset_name,file_name) )
-                train_runner(current_params, model, trainer, test_evaluator,optimizer=optimizer,path=file_path,seed=seed)
-        exit()
+            file_name = "_".join( ("ConvTrans",str(n),".pt") )
+            file_path= "/".join( ("saved_models",dataset_name,file_name) )
+            train_runner(current_params, model, trainer, test_evaluator,optimizer=optimizer,path=file_path,seed=seed)
 
         """
             for model_n in ["dResNet","ResNet"]:

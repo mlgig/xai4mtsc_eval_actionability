@@ -11,7 +11,7 @@ from models.ConvTran.Models.model import ConvTran
 
 import models.ConvTran.hyper_parameters  as conTran_param
 from models.ConvTran.utils import Initialization
-
+from copy import deepcopy
 from models.ConvTran.Models.utils import load_model as load_convTran
 from sktime.transformations.panel.rocket import (
 	MiniRocket,
@@ -23,14 +23,14 @@ from sklearn.linear_model import RidgeClassifierCV, LogisticRegressionCV
 from  sklearn.preprocessing import StandardScaler
 import os
 
-"""
+
 # TODO subsitute every occurency of synth_2lines with a "global variable" dataset_name
-for dataset_name in ['synth_2lines']:
+for dataset_name in  ['CMJ','MP','synth_2lines','synth_1line']:
 	train_X,train_y,test_X,test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
 	print("test shape",test_y.shape , test_X.shape)
 	device="cuda"
 	for file_name in os.listdir("saved_models/"+dataset_name) : #["dResNet.pt","ResNet.pt","MiniRocket.pt",]:
-		if file_name.endswith(".pt"):
+		if not file_name.startswith("ConvTrans"):
 			arch = torch.load( os.path.join( "./saved_models/",dataset_name,file_name), map_location=device )
 			model = ModelCNN(arch,1,device=device )
 			if file_name.startswith("dResNet") or file_name.startswith("dInception"):
@@ -50,30 +50,31 @@ for dataset_name in  ['CMJ','MP','synth_2lines','synth_1line']:
 	train_X,train_y,test_X,test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
 	device="cuda"
 
-	files =  os.listdir( "/".join( ("saved_models",dataset_name) ) )
-	for file in files:
+	for n in range(5,6):
 
-		if file.startswith("ConvTrans"):
-			parser = file.split("_")
-			norm = bool([parser[3]])
-			seed = int(parser[5])
-			conTrans_param.params['seed'] = seed
+		# file names
+		file_name = "_".join( ("ConvTrans",str(n),".pt") )
+		file_path= "/".join( ("saved_models",dataset_name,file_name) )
 
-			Initialization(conTrans_param.params)
-			train_loader,test_loader, conTran_params = transform4ConvTran( train_X, train_y,test_X, test_y,
-			                                                               conTran_param.params,n_classes)
-			model = ConvTran(conTran_params, num_classes=n_classes).to(device)
-			conTran_params['Norm'] = norm
-			file_path= "/".join( ("saved_models",dataset_name,file) )
-			model = load_convTran(model,file_path)
+		# loading default params and dataset
+		current_params = deepcopy(conTran_param.params)
+		train_loader,test_loader, current_params = transform4ConvTran( train_X, train_y,test_X, test_y,
+		                                                        current_params,n_classes,batch_s=(2,128))
+		# loading models and seed (initialise the random seed)
+		model = ConvTran(current_params, num_classes=n_classes).to(device)
+		model,seed = load_convTran(model,file_path)
+		current_params["seed"] = seed
+		device, seed = Initialization(current_params)
 
-
-			X_test_set = torch.tensor(test_loader.dataset.feature).type(torch.float).to(device)
-			predictions = torch.argmax( model(X_test_set) ,dim=-1).to("cpu").detach().numpy()
-			print(dataset_name,file, "has accuracy", accuracy_score(test_loader.dataset.labels,predictions))
-			b=2
-	exit()
-
+		start = timeit.default_timer()
+		y_pred = model.predict(test_loader)
+		end = timeit.default_timer()
+		print(	dataset_name, file_name, accuracy_score(test_loader.dataset.labels,y_pred),  "\t time was",end-start)
+		# forward
+		#X_test_set = torch.tensor(test_loader.dataset.feature).type(torch.float).to(device)
+		#predictions = torch.argmax( model(X_test_set) ,dim=-1).to("cpu").detach().numpy()
+		#print(dataset_name,n , "has accuracy", accuracy_score(test_loader.dataset.labels,predictions))
+"""
 """
 cls = [MiniRocket(n_jobs=-1) ,StandardScaler(),
 					LogisticRegressionCV(cv = 5, random_state=0, n_jobs = -1,max_iter=1000)]
