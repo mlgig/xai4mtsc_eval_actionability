@@ -11,7 +11,7 @@ from models.ConvTran.utils import Initialization
 from models.ConvTran.Models.model import ConvTran
 import models.ConvTran.hyper_parameters  as conTran_param
 from models.ConvTran.Training import SupervisedTrainer, train_runner
-
+from copy import deepcopy
 
 
 
@@ -34,21 +34,22 @@ def main():
 
             for norm in [True,False]:
                 # con trans
-                device, seed = Initialization(conTran_param.params)
-                train_loader,test_loader, conTran_params = transform4ConvTran( train_X, train_y,test_X, test_y,
-                                        conTran_param.params,n_classes)
-                model = ConvTran(conTran_params, num_classes=n_classes).to(device)
-                conTran_params['Norm'] = norm
+                current_params = deepcopy(conTran_param.params)
+                device, seed = Initialization(current_params)
+                train_loader,test_loader, current_params = transform4ConvTran( train_X, train_y,test_X, test_y,
+                                                                               current_params,n_classes)
+                model = ConvTran(current_params, num_classes=n_classes).to(device)
+                current_params['Norm'] = norm
                 optimizer = torch.optim.Adam(model.parameters())
 
-                trainer = SupervisedTrainer(model, train_loader, device,conTran_params['loss_module'],optimizer,
+                trainer = SupervisedTrainer(model, train_loader, device,current_params['loss_module'],optimizer,
                                             l2_reg=0, print_interval=10, console=False, print_conf_mat=False)
-                test_evaluator = SupervisedTrainer(model, test_loader, device, conTran_params['loss_module']
+                test_evaluator = SupervisedTrainer(model, test_loader, device, current_params['loss_module']
                                                 ,optimizer,print_interval=10, console=False,print_conf_mat=False)
 
-                file_name = "_".join( ("ConvTrans",str(n),"norm",str(norm),"seed",str(seed),".pt") )
+                file_name = "_".join( ("ConvTrans",str(n),"norm",str(norm),".pt") )
                 file_path= "/".join( ("saved_models",dataset_name,file_name) )
-                train_runner(conTran_params, model, trainer, test_evaluator,optimizer=optimizer,path=file_path)
+                train_runner(current_params, model, trainer, test_evaluator,optimizer=optimizer,path=file_path,seed=seed)
         exit()
 
         """
