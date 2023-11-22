@@ -1,7 +1,8 @@
 import os.path
 
 import torch
-from pytorch_utils import transform2tensors, transform_data4ResNet, transform4ConvTran
+
+from pytorch_utils import transform2tensors, transform_data4ResNet, transform4ConvTran, load_ConvTran
 import models.ConvTran.hyper_parameters  as conTrans_param
 from models.dCAM.src.models.CNN_models import ModelCNN, ResNetBaseline, dResNetBaseline
 from load_data import load_data
@@ -9,6 +10,7 @@ from sklearn.metrics import accuracy_score
 import timeit
 from models.ConvTran.Models.model import ConvTran
 
+import numpy as np
 import models.ConvTran.hyper_parameters  as conTran_param
 from models.ConvTran.utils import Initialization
 from copy import deepcopy
@@ -24,6 +26,7 @@ from  sklearn.preprocessing import StandardScaler
 import os
 
 
+"""
 # TODO subsitute every occurency of synth_2lines with a "global variable" dataset_name
 for dataset_name in  ['CMJ','MP','synth_2lines','synth_1line']:
 	train_X,train_y,test_X,test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
@@ -46,35 +49,30 @@ for dataset_name in  ['CMJ','MP','synth_2lines','synth_1line']:
 			print(	dataset_name, file_name, accuracy_score(enc.transform (test_y),y_pred),  "\t time was",end-start)
 """
 
-for dataset_name in  ['CMJ','MP','synth_2lines','synth_1line']:
+for dataset_name in  ['CMJ','MP']:#,'synth_2lines','synth_1line']:
 	train_X,train_y,test_X,test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
+	train_X = train_X.astype(np.float32) ; test_X = test_X.astype(np.float32)
 	device="cuda"
 
-	for n in range(5,6):
+	for n in range(0,2):
 
 		# file names
-		file_name = "_".join( ("ConvTrans",str(n),".pt") )
+		file_name = "ConvTran_"+str(n)+".pt"       # "_".join( ("ConvTrans",str(n),".pt") )
 		file_path= "/".join( ("saved_models",dataset_name,file_name) )
 
-		# loading default params and dataset
-		current_params = deepcopy(conTran_param.params)
-		train_loader,test_loader, current_params = transform4ConvTran( train_X, train_y,test_X, test_y,
-		                                                        current_params,n_classes,batch_s=(2,128))
-		# loading models and seed (initialise the random seed)
-		model = ConvTran(current_params, num_classes=n_classes).to(device)
-		model,seed = load_convTran(model,file_path)
-		current_params["seed"] = seed
-		device, seed = Initialization(current_params)
+		model, test_loader, enc ,device= load_ConvTran(test_X, test_y, train_X, train_y, n_classes, file_path)
 
-		start = timeit.default_timer()
-		y_pred = model.predict(test_loader)
-		end = timeit.default_timer()
-		print(	dataset_name, file_name, accuracy_score(test_loader.dataset.labels,y_pred),  "\t time was",end-start)
-		# forward
-		#X_test_set = torch.tensor(test_loader.dataset.feature).type(torch.float).to(device)
-		#predictions = torch.argmax( model(X_test_set) ,dim=-1).to("cpu").detach().numpy()
-		#print(dataset_name,n , "has accuracy", accuracy_score(test_loader.dataset.labels,predictions))
-"""
+		tot_preds = []
+		i=0
+		for batch in test_loader:
+			X,y , id  = batch
+			output = model(X.to(device))
+			preds = torch.argmax( output, dim = - 1).cpu().numpy()
+			tot_preds.append(preds)
+			i+=1
+		tot_preds = np.concatenate(tot_preds)
+		print ("ACCURACY:",i,accuracy_score(test_loader.dataset.labels,tot_preds) )
+
 """
 cls = [MiniRocket(n_jobs=-1) ,StandardScaler(),
 					LogisticRegressionCV(cv = 5, random_state=0, n_jobs = -1,max_iter=1000)]

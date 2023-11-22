@@ -2,6 +2,12 @@ import numpy as np
 from utils import one_hot_encoding, gen_cube, MyDataset
 from torch.utils.data import DataLoader
 import torch
+from models.ConvTran.utils import dataset_class
+from copy import deepcopy
+from models.ConvTran.hyper_parameters import params as transform_params
+from models.ConvTran.utils import Initialization
+from models.ConvTran.Models.model import ConvTran
+from models.ConvTran.Models.utils import load_model as load_transformer
 
 def transform_data4ResNet( X_train,y_train,X_test,y_test,device="cpu",batch_s=(64,64)):
 
@@ -47,42 +53,28 @@ def transform2tensors(X_train, y_train, X_test,y_test,batch_size=None,device="cp
         test_loader = DataLoader(MyDataset(X_test,y_test), batch_size=batch_size[1],shuffle=False)
         return train_loader, test_loader, enc
 
+####### ConTran #####################
+def transform4ConvTran(config, n_classes, test_X, test_y, train_X, train_y):
 
-##### ConvTrans ####
+    train_y,test_y,enc = one_hot_encoding(train_y,test_y)
 
-
-
-class dataset_class(torch.utils.data.Dataset):
-
-    def __init__(self, data, label):
-        super(dataset_class, self).__init__()
-
-        self.feature = data
-        self.labels = label.astype(np.int32)
-
-    def __getitem__(self, ind):
-
-        x = self.feature[ind]
-        x = x.astype(np.float32)
-
-        y = self.labels[ind]  # (num_labels,) array
-
-        data = torch.tensor(x)
-        label = torch.tensor(y).type(torch.LongTensor)
-
-        return data, label, ind
-
-    def __len__(self):
-        return len(self.labels)
-
-
-def transform4ConvTran( train_X, train_y,test_X, test_y, hyper_params, n_classes, batch_s):
-    train_y, test_y, enc = one_hot_encoding(train_y, test_y)
     train_dataset = dataset_class(train_X, train_y)
     test_dataset = dataset_class(test_X, test_y)
-    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_s[0], shuffle=True, pin_memory=True)
-    test_loader = DataLoader(dataset=test_dataset, batch_size=batch_s[1], shuffle=False, pin_memory=True)
-    hyper_params['num_labels'] = n_classes
-    hyper_params['Data_shape'] = train_loader.dataset.feature.shape
-    hyper_params['loss_module'] = torch.nn.CrossEntropyLoss(reduction='none')
-    return train_loader,test_loader, hyper_params
+    train_loader = DataLoader(dataset=train_dataset, batch_size=config['batch_size'], shuffle=True, pin_memory=True)
+    test_loader = DataLoader(dataset=test_dataset, batch_size=config['batch_size'], shuffle=False, pin_memory=True)
+    config['num_labels'] = n_classes
+    config['Data_shape'] = train_loader.dataset.feature.shape
+    config['loss_module'] = torch.nn.CrossEntropyLoss(reduction='none')
+    return train_loader, test_loader, enc
+
+def load_ConvTran(test_X, test_y, train_X, train_y, n_classes, path) :
+    config = deepcopy( transform_params )
+    device = Initialization(config)
+    config['batch_size'] = 32
+    train_loader, test_loader, enc = transform4ConvTran(config, n_classes, test_X, test_y, train_X, train_y)
+
+    model = ConvTran(config, num_classes=config['num_labels']).to(device)
+    loaed_model = load_transformer(model,path)
+    loaed_model.eval()
+
+    return loaed_model, test_loader, enc ,device
