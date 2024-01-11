@@ -210,7 +210,7 @@ class ScoreComputation:
                             train_y=dataset['train_y'],n_classes=dataset['n_classes'],path=self.model_path+".pt")
             self.model = model
         else:
-            self.model = torch.load(self.model_path+".pt", map_location=device) ; self.model.device = device
+            self.model = torch.load(self.model_path+".pt", map_location=device);  self.model.device = device
         self.batch_size = batch_size
 
         self.__init_samples(encoder)
