@@ -28,7 +28,7 @@ def load_data(data_name, concat=False , explanation_gt=False):
         test_X  = data['test']['X']
         test_y = data['test']['y']
 
-    elif data_name=="MP":
+    elif data_name.startswith('MP'):
         # TODO should I change the format?
         # TODO how can the label be returned?
         base_path = "./datasets/MilitaryPress/"
@@ -44,17 +44,21 @@ def load_data(data_name, concat=False , explanation_gt=False):
         train_X.columns = column_names
         test_X.columns = column_names
 
-        columns_subset = [ 'RShoulder_Y', 'RElbow_Y', 'RWrist_Y', 'LShoulder_Y', 'LElbow_Y', 'LWrist_Y','RHip_Y', 'LHip_Y']
-        train_X = from_nested_to_3d_numpy( train_X[columns_subset])
-        test_X = from_nested_to_3d_numpy( test_X[columns_subset])
+        if data_name=="MP":
+            columns_subset = [ 'RShoulder_Y', 'RElbow_Y', 'RWrist_Y', 'LShoulder_Y', 'LElbow_Y', 'LWrist_Y','RHip_Y', 'LHip_Y']
+            train_X = from_nested_to_3d_numpy( train_X[columns_subset])
+            test_X = from_nested_to_3d_numpy( test_X[columns_subset])
+        else:
+            train_X = from_nested_to_3d_numpy( train_X)
+            test_X = from_nested_to_3d_numpy( test_X)
 
     else:
         raise Exception("data_name must be either'synth_1line', 'synth_2lines' , 'CMJ' or 'MP' ")
 
     # transform (in case) and get info
     if concat:
-        train_X = train_X.reshape(train_X.shape[0],-1)
-        test_X = test_X.reshape(test_X.shape[0],-1)
+        train_X = np.squeeze( train_X.reshape(train_X.shape[0],1,-1) )
+        test_X = np.squeeze( test_X.reshape(test_X.shape[0],1,-1) )
 
     seq_len = train_X.shape[-1]
     n_channels = train_X.shape[-2]
@@ -64,3 +68,4 @@ def load_data(data_name, concat=False , explanation_gt=False):
         return  test_X, test_y, data["test"]['ground_truth'] , seq_len, n_channels, n_classes
     else:
         return  train_X, train_y, test_X, test_y, seq_len, n_channels, n_classes
+

@@ -3,6 +3,7 @@ from torch.utils import data
 import matplotlib.pyplot as plt
 import numpy as np
 
+# TODO add cite
 def gen_cube(instance):
     result = []
     for i in range(len(instance)):
@@ -26,6 +27,7 @@ def pre_fature_normalization(X_train,X_test):
     X_test_tfm2 = (X_test - f_mean) / f_std
     return  X_train_tfm2,X_test_tfm2
 
+
 def plot_dCAM( instance, dcam, nb_dim, idx ):
     plt.figure(figsize=(20,5))
     plt.title('multivariate data series')
@@ -43,11 +45,11 @@ def plot_dCAM( instance, dcam, nb_dim, idx ):
     #plt.colorbar(img)
 
 
-def minMax_normalization(X):
-    X  = np.abs(X)
-    #zeros = np.zeros(shape=X.shape)
-    #X = np.minimum(X,zeros)
-    X = (X - X.min() ) / (X.max() - X.min())
+def minMax_normalization(X, epsillon=0.0000000001):
+    #X  = np.abs(X)
+    zeros = np.zeros(shape=X.shape)
+    X = np.maximum(X,zeros)
+    X = (X - X.min() ) / ( (X.max() - X.min())  + epsillon)
     return X
 
 
