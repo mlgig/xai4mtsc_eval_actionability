@@ -708,13 +708,8 @@ class ScoreComputation:
                     Interp dataframe shape {interp.shape[1]}
                     is larger than nb feature {self.nb_features}"""
                 )
-            if interp.shape[1] == 0 or interp[interp >= 0].shape[0] == 0:
-                # TODO removed continue
-                a  = 2
-                #continue
 
-
-            class_name = self.encoder[np.argmax(pred_idx)] #self.encoder.inverse_transform(pred_idx.reshape(1, -1))
+            class_name = self.encoder[np.argmax(pred_idx)]
             dict_results = self.__interpretability_metrics(
                 idx_sample=idx,
                 signal=signal,
@@ -935,8 +930,6 @@ class ScoreComputation:
         randomly_modified_signal = np.transpose(randomly_modified_signal.values, (1, 0))
 
         sample_expected_values = self.expected_value[0,np.argmax( pred_idx )]
-        #sample_expected_values = self.expected_value * np.asarray(pred_idx.reshape(-1))
-        #sample_expected_values = sample_expected_values[sample_expected_values != 0][0]
 
         dict_results = {
             "frac_pts_rel": frac_pts_rel,
@@ -1039,7 +1032,6 @@ class ScoreComputation:
         correct_classification = score2.argmax(
             dim=1
         ).detach().cpu().numpy() == np.argmax(self.target_encoded, axis=1)
-        #score2 = score2.detach().cpu().numpy() * np.asarray(self.pred_idx)
         original_pred_score = score2.detach().cpu().numpy()[self.pred_idx.astype(bool) ]
         df_score.loc[:, "score2"] = original_pred_score #np.array([x[x != 0][0] for x in score3]
         df_score.loc[:, "modified_classification"] = correct_classification
@@ -1066,10 +1058,6 @@ class ScoreComputation:
         df_score.loc[:, "score3"] = original_pred_score #np.array([x[x != 0][0] for x in score3])
         df_score.loc[:, "random_classification"] = correct_classification
 
-        #sample_expected_values = self.expected_value * np.asarray(self.target_encoded)
-        #sample_expected_values = np.array(
-        #    [x[x != 0][0] for x in sample_expected_values]
-        #)
         sample_expected_values = [self.expected_value[0][i] for i in np.argmax(self.target_encoded ,axis=1)]
 
 
@@ -1136,23 +1124,6 @@ class ScoreComputation:
         different parameters required for the analysis
         """
 
-        # Find config file used for the simulations
-        #res = [
-        #    f
-        #    for f in os.listdir(self.model_path)
-        #    if re.search(r"config[a-zA-Z0-9_]+(.yaml|.xml)", f)
-        #]
-        #fc = os.path.abspath(os.path.join(self.model_path, res[0]))
-
-        #for file in glob.glob(fc):
-        #    print("file [fc] = ", file)
-        #    config_file = os.path.abspath(file)
-
-        #self.config = utils_data.parse_config(config_file)
-        #self.config["CONFIGURATION"]["data_path"] = pj(
-        #    data_path, self.config["CONFIGURATION"]["data_path"]
-        #)
-
         trainer = Trainable(self.dataset, self.model_path, retrieve_model=True)
         #model = trainer.train(self.model, self.dataset).to(device).eval()
         if self.model_output == "probabilities":
@@ -1177,9 +1148,6 @@ class ScoreComputation:
 
         data_module_kwargs = {
             "results_path": self.model_path,
-            #"num_train_epochs": self.config["CONFIGURATION"]["epochs"],
-            #"train_batch_size": self.config["MODEL"]["batch_size"],
-            #"val_batch_size": self.config["MODEL"]["batch_size"],
             "num_reader_epochs": 1,
         }
         #dataset = DataModule(**data_module_kwargs)
@@ -1189,12 +1157,6 @@ class ScoreComputation:
         self.nb_features = self.dataset['n_channels']
 
         # Fields to be loaded from the dataset
-        #all_fields = [
-        #    dataset.featureName,
-        #    dataset.targetName,
-        #    "noun_id",
-        #    "signal_names",
-        #]
         all_fields = [['signal', 'target', 'noun_id', 'signal_names']]
 
         target_encoded_all = []
@@ -1218,15 +1180,8 @@ class ScoreComputation:
         # make sure that we remove the lines with zeros created initially in the array
         if np_signal.shape[0] != len(list_sample_names):
             raise ValueError("Mismatch in sample shapes")
-        #np_signal = np_signal[: len(list_sample_names)]
-        #name_not_in_list = [x for x in self.names if x not in list_sample_names]
-        #if len(name_not_in_list) != 0:
-        #    print(f"{name_not_in_list} in name array are not included in the test set")
-        #    self.names = list(set(self.names) - set(name_not_in_list))
-        #index_to_explain = np.array( [i for i in range(self.dataset['y'].shape[0])] ) #np.where(np.isin(np.array(list_sample_names), self.names))
+
         self.np_signal = np_signal if self.f_transform==None else self.f_transform(np_signal)#[index_to_explain]
-        #if self.np_signal.shape[0] != len(self.names):
-        #    raise ValueError("Missing samples in signal to analyse")
         # Compute pred on self.np_signal
         batch_size = self.batch_size
         batched_sample = np.array_split(
