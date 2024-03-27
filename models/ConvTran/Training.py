@@ -5,10 +5,10 @@ import numpy as np
 from collections import OrderedDict
 import time
 from tqdm import tqdm
-from torch.utils.tensorboard import SummaryWriter
+#from torch.utils.tensorboard import SummaryWriter
 
 from models.ConvTran.Models.loss import l2_reg_loss
-from models.ConvTran.Models import utils, analysis
+#from models.ConvTran.Models import utils, analysis
 
 logger = logging.getLogger('__main__')
 
@@ -241,4 +241,4 @@ def train_runner(config, model, trainer, val_evaluator, path):
         logger.info(print_str)
     total_runtime = time.time() - total_start_time
     logger.info("Train Time: {} hours, {} minutes, {} seconds\n".format(*utils.readable_time(total_runtime)))
-    return
+    return save_best_model.best_valid_acc
