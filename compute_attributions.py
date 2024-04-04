@@ -43,9 +43,9 @@ def load_dataset(device, groups, model_name, test_X, test_y, train_X, train_y):
     """
     if model_name.startswith("dResNet"):
         groups, _,_,_,_= transform_data4ResNet(X_train=groups,y_train=[1], X_test=np.array([[1,2]]) ,y_test=[1],
-                                               device=device, batch_s=None)
+                                         batch_s=None)
         _, _, X_test, y_test, enc = transform_data4ResNet( X_train=train_X , X_test=test_X, y_test=test_y,
-                                                           y_train=train_y, device=device,batch_s=None)
+                                                           y_train=train_y, batch_s=None)
 
     else:
         X_train, y_train, X_test, y_test, enc = transform2tensors(X_train=train_X, y_train=train_y,

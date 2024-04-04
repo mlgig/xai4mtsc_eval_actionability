@@ -12,9 +12,13 @@ from models.ConvTran.Training import SupervisedTrainer, train_runner
 from copy import deepcopy
 
 
-################ functions to train classifiers ###########################
+""" functions to train classifiers """
 def train_d_ResNet(dataset_name, device, model_n, n_channels, n_classes, transform_data_dResnet,
                    transform_data_resnet,n_filters=128):
+    """
+    function to train dResNet and ResNet
+    """
+
     # load data and instantiate classifier accordingly
     if model_n == "ResNet":
         train_loader, test_loader, enc = transform_data_resnet()
@@ -36,7 +40,11 @@ def train_d_ResNet(dataset_name, device, model_n, n_channels, n_classes, transfo
     print(model_n, " accuracy was ", acc)
 
 
-def train_ConvTran(dataset_name, device,n_classes, test_X, test_y, train_X, train_y):
+def train_ConvTran(dataset_name,n_classes, test_X, test_y, train_X, train_y):
+    """
+    function to train ConvTran
+    """
+
     # load ConvTran parameters dictionary
     config = deepcopy(transform_params)
     device = Initialization(config)
@@ -63,6 +71,10 @@ def train_ConvTran(dataset_name, device,n_classes, test_X, test_y, train_X, trai
 
 def train_mini_rocket(dataset_name, device, n_channels, n_classes, seq_len, test_X, test_y, train_X, train_y,
                       transformer):
+    """
+    function to train MiniRocket and Rocket
+    """
+
     # transform dataset from numpy to torch tensor
     X_train, y_train, X_test, y_test, enc = transform2tensors(train_X, train_y, test_X, test_y, device=device)
 
@@ -78,7 +90,7 @@ def train_mini_rocket(dataset_name, device, n_channels, n_classes, seq_len, test
         print(transformer, "accuracy was", acc)
 
 
-############### main function ###################
+
 def main(args):
 
     # get arguments and device to be used
@@ -97,14 +109,14 @@ def main(args):
     elif classifier_name.lower().count("resnet")>0:
 
         transform_data_dResnet = lambda : transform_data4ResNet(X_train= train_X, y_train= train_y,
-             X_test= test_X, y_test= test_y,device=device, batch_s=(32,32))
+                         X_test= test_X, y_test= test_y, batch_s=(32,32))
         transform_data_resnet = lambda : transform2tensors(train_X,train_y,test_X,test_y, batch_size=(32,32),
                                                            device=device )
 
         train_d_ResNet(dataset_name, device, classifier_name, n_channels, n_classes,
                        transform_data_dResnet, transform_data_resnet)
     elif classifier_name.lower()=="convtran":
-        train_ConvTran(dataset_name, device, n_classes, test_X, test_y, train_X, train_y)
+        train_ConvTran(dataset_name, n_classes, test_X, test_y, train_X, train_y)
 
 
 if __name__ == "__main__" :

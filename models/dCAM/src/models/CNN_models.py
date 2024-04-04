@@ -1,16 +1,22 @@
-
-from torch import topk
 from torch import nn
 from torch.nn import functional as F
-from torch.utils import data
 from torch.optim import Adam
 from torch.autograd import Variable
 import numpy as np
-from tqdm import tqdm_notebook as tqdm
 import torch
 from typing import cast, Union, List
 
-
+"""
+	code from dcam publication
+	
+	@inproceedings{boniol2022dcam,
+	               title={dcam: Dimension-wise class activation map for explaining multivariate data series classification},
+	author={Boniol, Paul and Meftah, Mohammed and Remy, Emmanuel and Palpanas, Themis},
+	booktitle={Proceedings of the 2022 International Conference on Management of Data},
+	pages={1175--1189},
+	year={2022}
+	}
+"""
 
 class ModelCNN():
 	def __init__(self,

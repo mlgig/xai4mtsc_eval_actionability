@@ -9,9 +9,7 @@ from models.ConvTran.utils import Initialization
 from models.ConvTran.Models.model import ConvTran
 from models.ConvTran.Models.utils import load_model as load_transformer
 
-def transform_data4ResNet( X_train,y_train,X_test,y_test,device="cpu",batch_s=(64,64)):
-
-    # TODO fix for both methods batch_s=None, i.e. can i do everything using loaders?
+def transform_data4ResNet( X_train,y_train,X_test,y_test,batch_s=(64,64)):
 
     # first transform labels
     y_train,y_test,enc = one_hot_encoding( y_train,y_test )
@@ -53,7 +51,7 @@ def transform2tensors(X_train, y_train, X_test,y_test,batch_size=None,device="cp
         test_loader = DataLoader(MyDataset(X_test,y_test), batch_size=batch_size[1],shuffle=False)
         return train_loader, test_loader, enc
 
-####### ConvTran #####################
+""" functions for ConvTran """
 def transform4ConvTran(config, n_classes, test_X, test_y, train_X, train_y):
 
     train_y,test_y,enc = one_hot_encoding(train_y,test_y)

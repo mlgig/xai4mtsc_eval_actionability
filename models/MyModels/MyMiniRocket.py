@@ -18,7 +18,7 @@ class MyMiniRocket(nn.Module):
         self.n_channels = n_channels
         self.seq_len = seq_len
         self.n_classes = n_classes
-        self.normalise = normalise
+        self.normalise = normalisemo
         self.chunk_size = chunk_size
         self.device = device
         self.f_mean =None ; self.f_std = None

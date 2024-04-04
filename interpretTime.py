@@ -8,15 +8,6 @@ from InterpretTime.src.postprocessing_pytorch.manipulation_results import ScoreC
 from load_data import  load_data
 from InterpretTime.src.shared_utils.utils_visualization import plot_DeltaS_results, plot_additional_results
 
-
-"""
-def get_groups(n,n_chunks,n_channels,series_length):
-    #groups = np.array([[i + j * n_chunks for i in range(n_chunks)] for j in range(n_channels)])
-    groups = np.random.normal(size=(n,n_channels,n_chunks))
-    if n_chunks in [5,10,15,20]:
-        groups = np.repeat(groups, np.ceil(series_length / n_chunks).astype(int), axis=-1)[:, :, :series_length]
-    return groups
-"""
 all_qfeatures = [0.05, 0.15, 0.25, 0.35,0.45,0.55,0.65,0.75,0.85,0.95,1.0]
 
 def main(args):

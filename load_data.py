@@ -1,5 +1,4 @@
 import os.path
-
 import numpy as np
 from sktime.datasets  import  load_from_tsfile_to_dataframe
 from os.path import join
@@ -30,7 +29,8 @@ def load_data(data_name, concat=False , explanation_gt=False):
         test_y = data['test']['y']
 
     elif data_name=="CMJ_orig":
-        # Counter Movement Jump raw data i.e. varying length, including more data before and after jump (NOT USED in any experiment)
+        # Counter Movement Jump raw data i.e. varying length, including more data before and after
+        # jump (NOT USED in any experiment)
         train_X, train_y = load_from_arff_to_dataframe("./datasets/CounterMovementJump/CounterMovementJump_TRAIN.arff",replace_missing_vals_with='0')
         test_X, test_y = load_from_arff_to_dataframe("./datasets/CounterMovementJump/CounterMovementJump_TEST.arff",replace_missing_vals_with='0')
         train_X, test_X = from_nested_to_3d_numpy(train_X), from_nested_to_3d_numpy(test_X)
@@ -70,6 +70,7 @@ def load_data(data_name, concat=False , explanation_gt=False):
             test_X = from_nested_to_3d_numpy( test_X)
 
     elif data_name=="ECG":
+        # ECG dataset used in InterpretTime paper
         train = np.load("./datasets/ECG/ecg_train.npy",allow_pickle=True).item()
         val = np.load("./datasets/ECG/ecg_val.npy",allow_pickle=True).item()
         test = np.load("./datasets/ECG/ecg_test.npy",allow_pickle=True).item()

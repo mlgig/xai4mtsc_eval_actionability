@@ -14,6 +14,16 @@ logger = logging.getLogger('__main__')
 
 NEG_METRICS = {'loss'}  # metrics for which "better" is less
 
+"""
+    code from ConvTran publication
+    
+    @article{foumani2023improving,
+      title={Improving Position Encoding of Transformers for Multivariate Time Series Classification},
+      author={Foumani, Navid Mohammadi and Tan, Chang Wei and Webb, Geoffrey I and Salehi, Mahsa},
+      journal={arXiv preprint arXiv:2305.16642},
+      year={2023}
+    }
+"""
 
 class BaseTrainer(object):
 

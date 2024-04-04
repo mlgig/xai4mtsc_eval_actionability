@@ -6,6 +6,20 @@ from torch.nn import functional as F
 from torch import topk
 from tqdm import tqdm
 
+"""
+	code from dcam publication
+	
+	@inproceedings{boniol2022dcam,
+	               title={dcam: Dimension-wise class activation map for explaining multivariate data series classification},
+	author={Boniol, Paul and Meftah, Mohammed and Remy, Emmanuel and Palpanas, Themis},
+	booktitle={Proceedings of the 2022 International Conference on Management of Data},
+	pages={1175--1189},
+	year={2022}
+	}
+"""
+
+
+
 class SaveFeatures():
     features=None
     def __init__(self, m): self.hook = m.register_forward_hook(self.hook_fn)

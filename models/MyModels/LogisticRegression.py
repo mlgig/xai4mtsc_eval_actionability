@@ -8,7 +8,6 @@ from copy import deepcopy
 
 class LogisticRegression(torch.nn.Module):
 
-    # TODO device to be set CPU and move the cuda parameter setting in main
     def __init__(self, input_dim, output_dim,criterion,learning_rate= 0.0001,device="cpu",verbose=False):
         super(LogisticRegression, self).__init__()
         self.input_dim = input_dim
@@ -19,7 +18,6 @@ class LogisticRegression(torch.nn.Module):
         self.device=device
         self.verbose = verbose
 
-        # TODO following 3 need to be pass as parameters in the constructor ?
         self.max_epoch = 300
         self.check_every = 20
         self.early_stop_after = 60
@@ -106,8 +104,6 @@ class LogisticRegression(torch.nn.Module):
 
     def forward(self, x):
         scores = self.linear(x)
-        # TODO should I give back the softmax?
-        #outputs = nn.functional.softmax( scores, dim=-1 )# torch.softmax(scores, dim=-1)
         return scores
 
     def validation(self,Cs, k, X_train, y_train, batch_size):
@@ -116,7 +112,6 @@ class LogisticRegression(torch.nn.Module):
 
         # splits data ino k folds
         for i in range(k):
-            # TODO shuffle tensors before k_fold split
             train_loader, val_loader = self.__Kfold_split(X_train,y_train,k=k,i=i,batch_size=batch_size)
 
             for j,C in enumerate(Cs):
