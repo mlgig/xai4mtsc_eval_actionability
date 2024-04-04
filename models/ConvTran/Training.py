@@ -5,10 +5,10 @@ import numpy as np
 from collections import OrderedDict
 import time
 from tqdm import tqdm
-#from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 from models.ConvTran.Models.loss import l2_reg_loss
-#from models.ConvTran.Models import utils, analysis
+from models.ConvTran.Models import utils, analysis
 
 logger = logging.getLogger('__main__')
 
