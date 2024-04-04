@@ -11,7 +11,7 @@ from InterpretTime.src.shared_utils.utils_visualization import plot_DeltaS_resul
 all_qfeatures = [0.05, 0.15, 0.25, 0.35,0.45,0.55,0.65,0.75,0.85,0.95,1.0]
 
 def main(args):
-    print( args.datasets)
+
     for dataset_name in args.datasets:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         train_X, train_y, test_X, test_y, seq_len, n_channels, n_classes = load_data(dataset_name)
