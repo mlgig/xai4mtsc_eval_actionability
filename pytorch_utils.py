@@ -51,7 +51,7 @@ def transform2tensors(X_train, y_train, X_test,y_test,batch_size=None,device="cp
         test_loader = DataLoader(MyDataset(X_test,y_test), batch_size=batch_size[1],shuffle=False)
         return train_loader, test_loader, enc
 
-""" functions for ConvTran """
+########################   functions for ConvTran ###################################################
 def transform4ConvTran(config, n_classes, test_X, test_y, train_X, train_y):
 
     train_y,test_y,enc = one_hot_encoding(train_y,test_y)
