@@ -4,16 +4,16 @@
 This repo contain the code used in "Improving the Evaluation and Actionability of Explanation Methods for Multivariate Time Series Classification" (temporary repo to be updated after accept/reject notification)
 
 ## Dataset
-To be updated after accept/reject notification. Please create a directory named "datasets"
+To create a dir named datasets and place the content found here  https://drive.google.com/drive/folders/18tbVOkbac8Bvr8-8VZLf3fpzzJNc1vss?usp=drive_link
 
 ## Trained models
-To be updated after accept/reject notification. Please create a directory named "saved_models"
+To create a dir named 'saved_models' and place the content found here https://drive.google.com/drive/folders/1_Ld_6JFriAWLq18xRGzp-uxHOfrM5V5f?usp=drive_link
 
 ## Computed explanation
-To be updated after accept/reject notification. Please create a directory named "explanations"
+(optional) Saliency maps produced in our experiments, originally placed in a  dir named 'explanations'. Content can be found here https://drive.google.com/drive/folders/1B6NmIuekDVwyJxBZQX6uPOulc-_uGvPU?usp=drive_link
 
 ## Interpret Time outputs
-To be updated after accept/reject notification. Please create a directory named "IntepretTime_results"
+(optional) Outputs produced in our experiments by interpret time, originally placed in a  dir named 'IntepretTime_results'. Content can be found here https://drive.google.com/drive/folders/1S4y9_R1S7ba5XTUBEpmqDT4E9eNHuP8b?usp=drive_link
 
 ## Code usage
 Code run using python 3.9.18, using the library listed in requirements_py3.9.18.txt file. Executable files are:
