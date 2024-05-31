@@ -42,7 +42,7 @@ def main(args):
 
                 # create ScoreComputation object and run interpretTime using it
                 manipulation_results = ScoreComputation(model_path=(model_path,model_name[1]), noise_type=nt,
-                            names=None,dataset=test_set ,device=device,encoder=diction['classes_idx'],dResNet=dResNet)
+                            names=None,dataset=test_set ,device=device,encoder=diction['classes_idx'])
 
                 start = timeit.default_timer()
                 explanations_dict = diction['explanations']
