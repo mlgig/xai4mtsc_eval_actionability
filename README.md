@@ -1,7 +1,7 @@
 # Explanation-method4MTSC_captum
 
 ## Overview 
-This repo contain the code used in "Improving the Evaluation and Actionability of Explanation Methods for Multivariate Time Series Classification" (temporary repo to be updated after accept/reject notification)
+This repo contain the code used in the paper "Improving the Evaluation and Actionability of Explanation Methods for Multivariate Time Series Classification" accepted at ECMLPKDD 2024.
 
 ## Dataset
 To create a dir named datasets and place the content found here  https://drive.google.com/drive/folders/18tbVOkbac8Bvr8-8VZLf3fpzzJNc1vss?usp=drive_link
