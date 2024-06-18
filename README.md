@@ -45,8 +45,8 @@ channel selection
 
 ## Code:
 
-Code run using python 3.9.18, using the library listed in 
-requirements_py3.9.18.txt file.   <img src="https://github.com/favicon.ico" width="48">Executable files are:
+Code run using python 3.9.18, using the library listed in requirements_py3.9.18.txt file. 
+Executable files are:
 
 ### train_models.py:
 Script to train the models. Mandatory arguments are dataset(possible choices are CounterMovementJump, Military press along with synthetic and ECG data used in InterpretTime publication)
@@ -67,7 +67,7 @@ Mandatory fields are datasets (same as before), classifiers (same as before) and
 Script to be used to run interpret Time method. Some modifications were made for instance adding other masks, as specified in the paper, etc.
 Only mandatory argument is datasets (same as before)
 
-## Data:<img src="https://github.com/favicon.ico" width="48">
+## Data:
 
 ### Datasets
 To create a dir named datasets and place the content found here
