@@ -1,10 +1,10 @@
 # Explanation-method4MTSC_captum
 
 ## Overview:
-This repo contain the code used in the paper "Improving the Evaluation and Actionability of
-Explanation Methods for Multivariate Time Series Classification" accepted at ECMLPKDD 2024.
+This repo contain the code used in the paper ["Improving the Evaluation and Actionability of
+Explanation Methods for Multivariate Time Series Classification"](https://www.researchgate.net/publication/381427351_Improving_the_Evaluation_and_Actionability_of_Explanation_Methods_for_Multivariate_Time_Series_Classification) accepted at ECMLPKDD 2024.
 
-The main paper as pdf is available in the repository
+The main paper as pdf is also available in the repository.
 
 ## Abstract:
 Explanation for Multivariate Time Series Classification (MTSC) is an important topic that
