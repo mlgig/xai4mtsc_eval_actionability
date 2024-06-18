@@ -23,15 +23,18 @@ We apply the best ranked explainers to channel selection for MTSC and show signi
 data size reduction and improved classifier accuracy.
 
 ## Results:
-Table 8 shows result for the vanilla Interpret Time results, Table 3 shows
+Table 8 shows results for the vanilla Interpret Time results, Table 3 shows
 the ground truth results (not included in the original work) while Table 5 shows 
 results for our improved Interpret Time using our ***chunking*** technique.
-To be noted the metric improvement especially for AP and $$AUC\tilde{S}_{top}$$ while 
-running time (same for both Table 8 and 3) has shrunk by at least 1 order of magnitude
+To be noted the metric improvement especially for Average Precision (AP) and 
+$AUC\tilde{S}_{top}$ while running time (same for both Table 8 and 3) has 
+shrunk by at least 1 order of magnitude.
 
 ![image](https://github.com/mlgig/xai4mtsc_eval_actionability/blob/main/imgs/vanilla_interpretTime_results.png)
 
+
 ![image](https://github.com/mlgig/xai4mtsc_eval_actionability/blob/main/imgs/vanilla_gt_results.png)
+
 
 ![image](https://github.com/mlgig/xai4mtsc_eval_actionability/blob/main/imgs/our_method.png)
 
@@ -43,9 +46,7 @@ channel selection
 ## Code:
 
 Code run using python 3.9.18, using the library listed in 
-requirements_py3.9.18.txt file.
-
-Executable files are:
+requirements_py3.9.18.txt file.   <img src="https://github.com/favicon.ico" width="48">Executable files are:
 
 ### train_models.py:
 Script to train the models. Mandatory arguments are dataset(possible choices are CounterMovementJump, Military press along with synthetic and ECG data used in InterpretTime publication)
@@ -66,21 +67,25 @@ Mandatory fields are datasets (same as before), classifiers (same as before) and
 Script to be used to run interpret Time method. Some modifications were made for instance adding other masks, as specified in the paper, etc.
 Only mandatory argument is datasets (same as before)
 
-## Data:
+## Data:<img src="https://github.com/favicon.ico" width="48">
 
 ### Datasets
 To create a dir named datasets and place the content found here
+
 https://drive.google.com/drive/folders/18tbVOkbac8Bvr8-8VZLf3fpzzJNc1vss?usp=drive_link
 
 ### Trained models
 To create a dir named 'saved_models' and place the content found here
+
 https://drive.google.com/drive/folders/1_Ld_6JFriAWLq18xRGzp-uxHOfrM5V5f?usp=drive_link
 
 ### Computed explanations
 (optional) Saliency maps produced in our experiments, originally placed in a  dir named 'explanations'. Content can be found here 
+
 https://drive.google.com/drive/folders/1B6NmIuekDVwyJxBZQX6uPOulc-_uGvPU?usp=drive_link
 
 ### Interpret Time outputs
 (optional) Outputs produced in our experiments by interpret time, originally placed in a  dir named 'IntepretTime_results'. Content can be found here 
+
 https://drive.google.com/drive/folders/1S4y9_R1S7ba5XTUBEpmqDT4E9eNHuP8b?usp=drive_link
 
