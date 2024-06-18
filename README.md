@@ -1,4 +1,4 @@
-# Explanation-method4MTSC_captum
+# Explanation-XAI4MTSC-evaluation-actionability
 
 ## Overview:
 This repo contain the code used in the paper ["Improving the Evaluation and Actionability of
