@@ -6,7 +6,7 @@ Explanation Methods for Multivariate Time Series Classification"](https://arxiv.
 
 The main paper as a pdf is also available in the repository.
 
-To facilitate the use of the main results of the paper, we have also released a [separate library](https://github.com/mlgig/tscaptum) which adapts the main explanation methods  for the scikit-learn / sktime / aeon classifiers along with the ***chunking strategy*** improvement used in the paper.
+To facilitate the use of the main results of the paper, we have also released a separate library [tsCaptum](https://github.com/mlgig/tscaptum) which adapts the main explanation methods for the scikit-learn / sktime / aeon classifiers along with the ***chunking strategy*** improvement used in the paper.
 
 ## Abstract:
 Explanation for Multivariate Time Series Classification (MTSC) is an important topic that is under explored. There are very few quantitative evaluation methodologies and even fewer examples of actionable explanations, where the explanation methods are shown to objectively improve specific computational tasks on time series data. In this paper we focus on analyzing InterpretTime, a recent evaluation methodology for attribution methods applied  to MTSC. We reproduce the original paper results, showcase some significant weaknesses of the methodology and propose ideas to improve both its accuracy and efficiency. 
@@ -85,6 +85,7 @@ https://drive.google.com/drive/folders/1S4y9_R1S7ba5XTUBEpmqDT4E9eNHuP8b?usp=dri
     title={Improving the Evaluation and Actionability of Explanation Methods for Multivariate Time Series Classification},
     author={Davide Italo Serramazza and Thach Le Nguyen and Georgiana Ifrim},
     year={2024},
+    conference={ECMLPKDD}
     eprint={2406.12507},
     archivePrefix={arXiv},
     primaryClass={cs.LG}
