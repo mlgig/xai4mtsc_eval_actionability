@@ -15,9 +15,9 @@ selection in MTSC. We find that perturbation-based methods such as SHAP and Feat
 We apply the best ranked explainers to channel selection for MTSC and show significant data size reduction and improved classifier accuracy.
 
 ## Results:
-Table 8 which shows results for the vanilla Interpret Time results and Table 3 which shows the ground truth results (not included in the original Interpret Time work) are our baslienes.
+Table 8 which shows results for the vanilla InterpretTime results and Table 3 which shows the ground truth results (not included in the original InterpretTime work) are our baselines.
 
-Table 5 shows results for our improved Interpret Time using ***multiple masks*** to perturb data other than $N(0,1)$, as done by the vanilla Interpret Time, and using the ***chunking*** technique, to adapt the explanation methods to Time Series e.g. by considering their locality. 
+Table 5 shows results for our improved InterpretTime using ***multiple masks*** to perturb data other than $N(0,1)$, as done by the vanilla InterpretTime, and using the ***chunking*** technique, to adapt the explanation methods to Time Series e.g. by considering their locality. 
 To be noted the metrics improvement especially for Average Precision (AP) and $AUC\tilde{S}_{top}$ while running time (same for both Table 8 and 3) has shrunk by at least 1 order of magnitude.
 
 ![image](https://github.com/mlgig/xai4mtsc_eval_actionability/blob/main/imgs/vanilla_interpretTime_results.png)
@@ -28,20 +28,19 @@ To be noted the metrics improvement especially for Average Precision (AP) and $A
 
 ![image](https://github.com/mlgig/xai4mtsc_eval_actionability/blob/main/imgs/our_method.png)
 
-Table 7 shows result for our actionability experiment i.e. to have an alternative 
-channel selection
+Table 7 shows results for our actionability experiment i.e. to have an alternative 
+channel selection approach which uses the aggregated attribution to compute channel importance:
 
 ![image](https://github.com/mlgig/xai4mtsc_eval_actionability/blob/main/imgs/actionability.png)
 
 ## Code:
 
-Code run using python 3.9.18, using the library listed in requirements_py3.9.18.txt file. 
+Code run using python 3.9.18, using the libraries listed in requirements_py3.9.18.txt file. 
 Executable files are:
 
 ### train_models.py:
-Script to train the models. Mandatory arguments are dataset(possible choices are CounterMovementJump, Military press along with synthetic and ECG data used in InterpretTime publication)
-and classifier (possible choices are ResNet, dResNet, Rocket, MiniRocket and ConvTran)
-. Optional field is concat i.e. whether to concatenate all channels to get a univariate time series
+Script to train the models. Mandatory arguments are dataset (possible choices are CounterMovementJump, Military press along with synthetic and ECG data used in InterpretTime publication)
+and classifier (possible choices are ResNet, dResNet, Rocket, MiniRocket and ConvTran). Optional field is concat i.e. whether to concatenate all channels to get a univariate time series.
 
 ### compare_explanations.py
 Script used to run the ground truth methodology described in the paper on synthetic data.
@@ -54,8 +53,8 @@ At the top of the script a dictionary named captum_methods is defined to list th
 Mandatory fields are datasets (same as before), classifiers (same as before) and ns_chunks i.e. which number of chunks (definition in the paper) to try. Use -1 to compute point-wise i.e. no chunking
 
 ### interpretTime.py
-Script to be used to run interpret Time method. Some modifications were made for instance adding other masks, as specified in the paper, etc.
-Only mandatory argument is datasets (same as before)
+Script to be used to run interpretTime method. Some modifications were made for instance adding other masks, as specified in the paper, etc.
+Only mandatory argument is datasets (same as before).
 
 ## Data:
 
@@ -74,8 +73,8 @@ https://drive.google.com/drive/folders/1_Ld_6JFriAWLq18xRGzp-uxHOfrM5V5f?usp=dri
 
 https://drive.google.com/drive/folders/1B6NmIuekDVwyJxBZQX6uPOulc-_uGvPU?usp=drive_link
 
-### Interpret Time outputs
-(optional) Outputs produced in our experiments by interpret time, originally placed in a  dir named 'IntepretTime_results'. Content can be found here 
+### InterpretTime outputs
+(optional) Outputs produced in our experiments by InterpretTime, originally placed in a  dir named 'IntepretTime_results'. Content can be found here 
 
 https://drive.google.com/drive/folders/1S4y9_R1S7ba5XTUBEpmqDT4E9eNHuP8b?usp=drive_link
 
