@@ -36,7 +36,7 @@ def load_data(data_name, concat=False , explanation_gt=False):
         train_X, test_X = from_nested_to_3d_numpy(train_X), from_nested_to_3d_numpy(test_X)
         a =3
 
-    elif data_name.startswith('MP_centered'):
+    elif data_name=='MP_centred':
         # Military press centered i.e. subtracting mean from each channel
         data = np.load('./datasets/MilitaryPress/MP_centered.npy', allow_pickle=True).item()
         train_X  = data['train']['X']
@@ -44,7 +44,7 @@ def load_data(data_name, concat=False , explanation_gt=False):
         test_X  = data['test']['X']
         test_y = data['test']['y']
 
-    elif data_name.startswith('MP'):
+    elif data_name=='MP':
         # Military Press raw data
         base_path = "./datasets/MilitaryPress/"
         train_X, train_y = load_from_tsfile_to_dataframe(join(base_path,"TRAIN_full_X.ts"))
@@ -59,7 +59,7 @@ def load_data(data_name, concat=False , explanation_gt=False):
         train_X.columns = column_names
         test_X.columns = column_names
 
-        if data_name=="MP":
+        if data_name=='MP8':
             # using the domain expert channels selection
             columns_subset = [ 'RShoulder_Y', 'RElbow_Y', 'RWrist_Y', 'LShoulder_Y', 'LElbow_Y', 'LWrist_Y','RHip_Y', 'LHip_Y']
             train_X = from_nested_to_3d_numpy( train_X[columns_subset])
@@ -81,7 +81,7 @@ def load_data(data_name, concat=False , explanation_gt=False):
         test_y = np.argmax( test["y"],axis=-1)
 
     else:
-        raise Exception("data_name must be either synth_data, 'CMJ', 'MP50', 'MP', 'MP_centred' or 'ECG' ")
+        raise Exception("data_name must be either synth_data, 'CMJ', 'MP50', 'MP8', 'MP_centred' or 'ECG' ")
 
     if concat:
         # concat if required
