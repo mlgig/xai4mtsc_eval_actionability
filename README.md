@@ -58,25 +58,8 @@ Only mandatory argument is datasets (same as before).
 
 ## Data:
 
-### Datasets
-To create a dir named datasets and place the content found here
+Datasets, trained models, computed attributions and InterpretTime outputs are available through [zenodo](https://zenodo.org/records/20608265)
 
-https://drive.google.com/drive/folders/18tbVOkbac8Bvr8-8VZLf3fpzzJNc1vss?usp=drive_link
-
-### Trained models
-To create a dir named 'saved_models' and place the content found here
-
-https://drive.google.com/drive/folders/1_Ld_6JFriAWLq18xRGzp-uxHOfrM5V5f?usp=drive_link
-
-### Computed explanations
-(optional) Saliency maps produced in our experiments, originally placed in a  dir named 'explanations'. Content can be found here 
-
-https://drive.google.com/drive/folders/1B6NmIuekDVwyJxBZQX6uPOulc-_uGvPU?usp=drive_link
-
-### InterpretTime outputs
-(optional) Outputs produced in our experiments by InterpretTime, originally placed in a  dir named 'IntepretTime_results'. Content can be found here 
-
-https://drive.google.com/drive/folders/1S4y9_R1S7ba5XTUBEpmqDT4E9eNHuP8b?usp=drive_link
 
 ## how to cite:
 ```
