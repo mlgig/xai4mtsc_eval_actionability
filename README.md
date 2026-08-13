@@ -73,3 +73,22 @@ Datasets, trained models, computed attributions and InterpretTime outputs are av
     primaryClass={cs.LG}
 }
 ```
+```
+@InProceedings{10.1007/978-3-031-70359-1_11,
+author="Serramazza, Davide Italo
+and Nguyen, Thach Le
+and Ifrim, Georgiana",
+editor="Bifet, Albert
+and Davis, Jesse
+and Krilavi{\v{c}}ius, Tomas
+and Kull, Meelis
+and Ntoutsi, Eirini
+and {\v{Z}}liobait{\.{e}}, Indr{\.{e}}",
+title="Improving the Evaluation and Actionability of Explanation Methods for Multivariate Time Series Classification",
+booktitle="Machine Learning and Knowledge Discovery in Databases. Research Track",
+year="2024",
+publisher="Springer Nature Switzerland",
+address="Cham",
+pages="177--195",
+isbn="978-3-031-70359-1"
+}
